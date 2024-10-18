@@ -10,9 +10,11 @@
 #define WAIT_LONG  5 
 #define WAIT_SHORT 4 
 
-// USISR mask
-#define USISR_CLOCK_8_BITS 0b11110000
-#define USISR_CLOCK_1_BIT  0b11111110
+// Counter settings for USISR
+// Note: counter increments on *both* rising and falling edges in i2c mode.
+// So counts twice for each bit transferred.
+#define USISR_8_BIT_TRANSFER 0b11110000
+#define USISR_1_BIT_TRANSFER  0b11111110
 
 
 void i2c_init() {
@@ -23,7 +25,7 @@ void i2c_init() {
 	PORTB |= (1 << PIN_SDA);
 
 	USISR = (1 << USISIF)| // Start Condition Interrupt Flag
-			(1 << USIOIF)| //  Counter Overflow Interrupt Flag
+			(1 << USIOIF)| // Counter Overflow Interrupt Flag
 			(1 << USIPF)|  // Stop Condition Flag
 			(1 << USIDC);  // Data Output Collision
 
@@ -38,7 +40,7 @@ void i2c_start() {
 	_delay_us(WAIT_LONG);
 	PORTB &= ~(1<<PIN_SCL); // scl low	
 	
-	// !!! this is NEEDED !!! BUT WHY ???
+	// !!! this is NEEDED !!! BUT WHY, where is the documentation for it ???
 	PORTB |= (1<<PIN_SDA); // sda high (release to start transmitting)
 }
 
@@ -50,13 +52,10 @@ void i2c_stop() {
 	PORTB |= (1<<PIN_SDA);
 }
 
-uint8_t i2c_transfer(uint8_t usisr_mask) {
+uint8_t i2c_transfer(uint8_t usisr_val) {
 
-	// force SDL low (it's already low probably, since we're
-	// toggling it up and down in pairs, but just in case...)
-	PORTB &= ~(1<<PIN_SCL);
-
-	USISR = usisr_mask;
+	// TODO: change usisr_val to counter value?
+	USISR = usisr_val;
 
 	while(!(USISR & (1 << USIOIF)))
 	{
@@ -79,7 +78,7 @@ uint8_t i2c_read_ack()
 {
 	// Set SDA to input
 	DDRB &= ~(1<< PIN_SDA);
-	uint8_t ack = i2c_transfer(USISR_CLOCK_1_BIT);
+	uint8_t ack = i2c_transfer(USISR_1_BIT_TRANSFER);
 	DDRB |= (1 << PIN_SDA);
 	return ack;
 }
@@ -88,35 +87,9 @@ uint8_t i2c_read_ack()
 // returns 0 if there's a valid nack, otherwise 1
 void i2c_write_byte(uint8_t data) {
 	USIDR = data;
-	i2c_transfer(USISR_CLOCK_8_BITS);
+	i2c_transfer(USISR_8_BIT_TRANSFER);
 
-	// wait for ack
-	// DDRB &= ~(1<< PIN_SDA); // to input
-	// i2c_transfer(USISR_CLOCK_1_BIT);
-	// DDRB |= (1 << PIN_SDA);
+	// Read acknowledgement from slave
+	i2c_read_ack();
 
-	// Read acknologement from slave
-	if (i2c_read_ack())
-	{
-		DDRB |= (1 << DDB3);
-		PORTB |=  (1 << PB3);
-	}
-
-}
-
-// controller reads 1 byte from the bus
-// and sends a nack if wanna read another one
-// (1 = will read another one, 0 = stop sending)
-// returns the read byte
-uint8_t i2c_read_byte(uint8_t nack) {
-
-	DDRB &= ~(1<< PIN_SDA); // reciving, so change to input
-	uint8_t data = i2c_transfer(USISR_CLOCK_8_BITS);
-	DDRB |= (1 << PIN_SDA);
-
-	// send nack
-	USIDR = nack;
-	i2c_transfer(USISR_CLOCK_1_BIT);
-
-	return data;
 }

@@ -24,10 +24,22 @@ void blink_light()
 
 int main()
 {
+    //==================================================
+    // Enable update to CLKPR
+    CLKPR=0x80; 
+    // Change prescaler to 1 (run attiny85 at 8Mhz)
+    CLKPR=0;
+    //==================================================
+
 	i2c_init();
 
 	ssd1306_init();
-	ssd1306_send_data(default_image_length, image_1); // ssd1306 raw example: show an image
+	ssd1306_send_progmem_data(default_image_length, image_1); // ssd1306 raw example: show an image
+
+    _delay_ms(2000);
+    clear_screen();
+    draw_lines();
+
 
     while(1)
     {

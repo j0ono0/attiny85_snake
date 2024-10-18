@@ -84,5 +84,38 @@ void ssd1306_send_data(int length, const uint8_t data[]) {
 	ssd1306_stop();
 }
 
+// ATTN: Reads from prog memory
+void ssd1306_send_progmem_data(int length, const uint8_t data[]) {
+	ssd1306_start();
+	i2c_write_byte(SSD1306_CONTROL_BYTE_DATA);
+	for (int i = 0; i < length; i++) {
+		i2c_write_byte(pgm_read_byte(&data[i]));
+	}
+	ssd1306_stop();
+}
+
+void clear_screen()
+{
+	ssd1306_start();
+	i2c_write_byte(SSD1306_CONTROL_BYTE_DATA);
+	for (int i = 0; i < 1024; i++) {
+		i2c_write_byte(0x00);
+	}
+	ssd1306_stop();
+}
+
+void draw_lines()
+{
+	ssd1306_start();
+	i2c_write_byte(SSD1306_CONTROL_BYTE_DATA);
+	i2c_write_byte(0xFF);
+	i2c_write_byte(0x00);
+	i2c_write_byte(0xFF);
+	i2c_write_byte(0x00);
+	i2c_write_byte(0xFF);
+	ssd1306_stop();
+
+}
+
 
 #endif

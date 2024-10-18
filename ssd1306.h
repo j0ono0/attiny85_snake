@@ -54,6 +54,10 @@ void ssd1306_start();
 void ssd1306_stop();
 void ssd1306_send_commands(int length, const uint8_t commands[]);
 void ssd1306_send_data(int length, const uint8_t data[]);
+void ssd1306_send_progmem_data(int length, const uint8_t data[]);
+
+void clear_screen();
+void draw_lines();
 
 
 const static int default_image_length = 1024;

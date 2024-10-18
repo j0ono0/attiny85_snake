@@ -7,7 +7,5 @@
     uint8_t i2c_transfer(uint8_t usisr_mask);
     uint8_t i2c_read_ack();
     void i2c_write_byte(uint8_t data);
-    uint8_t i2c_read_byte(uint8_t nack);
-
 
 #endif
