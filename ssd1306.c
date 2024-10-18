@@ -45,50 +45,44 @@ static const uint8_t PROGMEM ssd1306_initData[] =
 
 
 void ssd1306_init() {
-	i2c_start();
-	// Send slave address + write command
-	i2c_write_byte(SSD1306_ADDR_WRITE);
-
+	ssd1306_start();
+	// Accessing prog mem - hence not using ssd1306_send_commands()
 	i2c_write_byte(SSD1306_CONTROL_BYTE_CMD);
-
-
 	for (int i = 0; i < sizeof(ssd1306_initData); i++) {
-		i2c_write_byte(pgm_read_byte(&ssd1306_initData[i])); // progmem access
+		i2c_write_byte(pgm_read_byte(&ssd1306_initData[i]));
 	}
 	i2c_stop();
 }
 
-void ssd1306_send_multiple_commands(int length, char commands[]) {
-	if (length <= 0) return;
-
+void ssd1306_start()
+{
 	i2c_start();
 	i2c_write_byte(SSD1306_ADDR_WRITE);
-		i2c_write_byte(SSD1306_CONTROL_BYTE_CMD);
+}
+
+void ssd1306_stop()
+{
+	i2c_stop();
+}
+
+void ssd1306_send_commands(int length, const uint8_t commands[]) {
+	ssd1306_start();
+	i2c_write_byte(SSD1306_CONTROL_BYTE_CMD);
 	for (int i = 0; i < length; i++) {
 		i2c_write_byte(commands[i]);
 	}
-	i2c_stop();
+	ssd1306_stop();
 }
 
 
-void ssd1306_send_multiple_data(int length, char data[]) {
-	i2c_start();
-	i2c_write_byte(SSD1306_ADDR_WRITE);
-		i2c_write_byte(SSD1306_CONTROL_BYTE_CMD);
+void ssd1306_send_data(int length, const uint8_t data[]) {
+	ssd1306_start();
+	i2c_write_byte(SSD1306_CONTROL_BYTE_DATA);
 	for (int i = 0; i < length; i++) {
 		i2c_write_byte(data[i]);
 	}
-	i2c_stop();
+	ssd1306_stop();
 }
 
-void ssd1306_send_progmem_multiple_data(const int length, const char *data) {
-	i2c_start();
-	i2c_write_byte(SSD1306_ADDR_WRITE);
-		i2c_write_byte(SSD1306_CONTROL_BYTE_DATA);
-	for (int i = 0; i < length; i++) {
-		i2c_write_byte(pgm_read_byte(data + i));
-	}
-	i2c_stop();
-}
 
 #endif

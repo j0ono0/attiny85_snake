@@ -27,7 +27,7 @@ int main()
 	i2c_init();
 
 	ssd1306_init();
-	ssd1306_send_progmem_multiple_data(default_image_length, image_1); // ssd1306 raw example: show an image
+	ssd1306_send_data(default_image_length, image_1); // ssd1306 raw example: show an image
 
     while(1)
     {

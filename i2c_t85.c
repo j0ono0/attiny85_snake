@@ -50,7 +50,7 @@ void i2c_stop() {
 	PORTB |= (1<<PIN_SDA);
 }
 
-uint8_t i2c_transfer(unsigned char usisr_mask) {
+uint8_t i2c_transfer(uint8_t usisr_mask) {
 
 	// force SDL low (it's already low probably, since we're
 	// toggling it up and down in pairs, but just in case...)
@@ -86,7 +86,7 @@ uint8_t i2c_read_ack()
 
 // controller sends a byte to the bus
 // returns 0 if there's a valid nack, otherwise 1
-void i2c_write_byte(unsigned char data) {
+void i2c_write_byte(uint8_t data) {
 	USIDR = data;
 	i2c_transfer(USISR_CLOCK_8_BITS);
 
@@ -108,10 +108,10 @@ void i2c_write_byte(unsigned char data) {
 // and sends a nack if wanna read another one
 // (1 = will read another one, 0 = stop sending)
 // returns the read byte
-unsigned char i2c_read_byte(unsigned char nack) {
+uint8_t i2c_read_byte(uint8_t nack) {
 
 	DDRB &= ~(1<< PIN_SDA); // reciving, so change to input
-	unsigned char data = i2c_transfer(USISR_CLOCK_8_BITS);
+	uint8_t data = i2c_transfer(USISR_CLOCK_8_BITS);
 	DDRB |= (1 << PIN_SDA);
 
 	// send nack
