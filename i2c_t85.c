@@ -1,7 +1,18 @@
 
-
+#include <util/delay.h> 
 #include <avr/pgmspace.h>
+
 #include "i2c_t85.h"
+
+#define PIN_SDA PB0
+#define PIN_SCL PB2
+
+#define WAIT_LONG  5 
+#define WAIT_SHORT 4 
+
+// USISR mask
+#define USISR_CLOCK_8_BITS 0b11110000
+#define USISR_CLOCK_1_BIT  0b11111110
 
 
 void i2c_init() {
@@ -10,8 +21,6 @@ void i2c_init() {
 
 	PORTB |= (1 << PIN_SCL);
 	PORTB |= (1 << PIN_SDA);
-
-	USIDR = 0x80;
 
 	USISR = (1 << USISIF)| // Start Condition Interrupt Flag
 			(1 << USIOIF)| //  Counter Overflow Interrupt Flag
@@ -28,25 +37,17 @@ void i2c_start() {
 	PORTB &= ~(1<<PIN_SDA); // sda low (start condition)
 	_delay_us(WAIT_LONG);
 	PORTB &= ~(1<<PIN_SCL); // scl low	
+	
+	// !!! this is NEEDED !!! BUT WHY ???
 	PORTB |= (1<<PIN_SDA); // sda high (release to start transmitting)
 }
 
 void i2c_stop() {
-
-	// SDA goes low
-	PORTB &= ~(1<<PIN_SDA);
-
-	// release SCL
 	PORTB |= (1<<PIN_SCL);
-	while (! (PINB & (1<<PIN_SCL)));
-
+	// Wait until PIN_SCL is high
+	while (!PIN_SCL){};
 	_delay_us(WAIT_LONG);
-
-	// release SDA
 	PORTB |= (1<<PIN_SDA);
-	
-	_delay_us(WAIT_SHORT);
-
 }
 
 uint8_t i2c_transfer(unsigned char usisr_mask) {
@@ -57,16 +58,6 @@ uint8_t i2c_transfer(unsigned char usisr_mask) {
 
 	USISR = usisr_mask;
 
-	// transfer until counter overflow
-	// do {
-	// 	// _delay_us(WAIT_LONG);
-	// 	USICR |= (1 << USITC);
-	// 	while (! (PINB & (1<<PIN_SCL))); //Waiting for SCL to go high
-	// 	// _delay_us(WAIT_SHORT);
-	// 	USICR |= (1 << USITC);
-	// } while (!(USISR & (1 << USIOIF)));
-	// // _delay_us(WAIT_LONG);
-
 	while(!(USISR & (1 << USIOIF)))
 	{
 		USICR |= (1 << USITC);
@@ -74,12 +65,6 @@ uint8_t i2c_transfer(unsigned char usisr_mask) {
 
 	uint8_t response_data = USIBR;
 
-	// release SDA
-	// "The output pin (DO or SDA, depending on the wire mode)
-	// is connected via the output latch to the most significant
-	// bit (bit 7) of the USI Data Register."
-	// (so write 1 to set SDA high before the next operation,
-	// otherwise it'll be pulled down and read may not work)
 	USIDR = 0xFF; // 0x80 will work too (bit 7)
 
 	// Reset counter overflow flag

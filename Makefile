@@ -6,7 +6,7 @@
 TARGET = t85
 BAUD  = 125kHz
 
-F_CPU = 16000000UL 
+F_CPU = 1000000UL 
 CC = avr-gcc
 OBJCOPY = avr-objcopy
 

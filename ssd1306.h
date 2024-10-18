@@ -6,12 +6,10 @@
 
 // constant names from https://github.com/tibounise/SSD1306-AVR
 
-#define SSD1306_ADDR_WRITE 					0x78
+#define SSD1306_ADDR_WRITE 0x78
 
-#define SSD1306_CONTROL_BYTE_ONE_COMMAND			0x00
-#define SSD1306_CONTROL_BYTE_MULTIPLE_COMMANDS		0x80
-#define SSD1306_CONTROL_BYTE_ONE_DATA				0x40
-#define SSD1306_CONTROL_BYTE_MULTIPLE_DATA			0xC0
+#define SSD1306_CONTROL_BYTE_CMD  0x00
+#define SSD1306_CONTROL_BYTE_DATA 0x40
 
 
 // ---------------------------------------
@@ -50,10 +48,9 @@
 #define VERTICAL_ADDRESSING_MODE    0x01
 #define PAGE_ADDRESSING_MODE        0x02
 
-void ssd1306_send_single_command(char command);
+
 void ssd1306_init();
 void ssd1306_send_multiple_commands(int length, char commands[]);
-void ssd1306_send_single_data(char data);
 void ssd1306_send_multiple_data(int length, char data[]);
 void ssd1306_send_progmem_multiple_data(const int length, const char *data);
 
