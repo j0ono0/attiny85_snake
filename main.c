@@ -29,6 +29,9 @@ int main()
     CLKPR=0x80; 
     // Change prescaler to 1 (run attiny85 at 8Mhz)
     CLKPR=0;
+    //
+    // (*could this be temporarly enabled when updating screen?)
+    //
     //==================================================
 
 	i2c_init();

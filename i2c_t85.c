@@ -12,9 +12,9 @@
 
 // Counter settings for USISR
 // Note: counter increments on *both* rising and falling edges in i2c mode.
-// So counts twice for each bit transferred.
-#define USISR_8_BIT_TRANSFER 0b11110000
-#define USISR_1_BIT_TRANSFER  0b11111110
+// Counts twice for each bit transferred.
+#define USICTN_8_BIT_TRANSFER 0x0 
+#define USICTN_1_BIT_TRANSFER  0xe 
 
 
 void i2c_init() {
@@ -37,59 +37,51 @@ void i2c_init() {
 
 void i2c_start() {
 	PORTB &= ~(1<<PIN_SDA); // sda low (start condition)
-	_delay_us(WAIT_LONG);
 	PORTB &= ~(1<<PIN_SCL); // scl low	
 	
 	// !!! this is NEEDED !!! BUT WHY, where is the documentation for it ???
-	PORTB |= (1<<PIN_SDA); // sda high (release to start transmitting)
+	PORTB |= (1<<PIN_SDA); 
 }
 
 void i2c_stop() {
 	PORTB |= (1<<PIN_SCL);
-	// Wait until PIN_SCL is high
-	while (!PIN_SCL){};
-	_delay_us(WAIT_LONG);
 	PORTB |= (1<<PIN_SDA);
 }
 
-uint8_t i2c_transfer(uint8_t usisr_val) {
-
-	// TODO: change usisr_val to counter value?
-	USISR = usisr_val;
-
+void i2c_transfer(uint8_t usictn_mask) {
+	// Set counter
+	USISR |= usictn_mask;
 	while(!(USISR & (1 << USIOIF)))
 	{
 		USICR |= (1 << USITC);
 	}
+	// Clear USISR flags
+	USISR |= 0xF0;
 
-	uint8_t response_data = USIBR;
 
-	USIDR = 0xFF; // 0x80 will work too (bit 7)
+	// WQHY IS THIS HERE ????
+	// Set PIN_SDA high via USIDR
+	USIDR = 0x80;
 
-	// Reset counter overflow flag
-	// !!! Not needed ??? !!!
-	// USISR |= (1 << USIOIF);
-
-	return response_data; // previous USIDR copy
 
 }
 
 uint8_t i2c_read_ack()
 {
-	// Set SDA to input
-	DDRB &= ~(1<< PIN_SDA);
-	uint8_t ack = i2c_transfer(USISR_1_BIT_TRANSFER);
-	DDRB |= (1 << PIN_SDA);
+	DDRB &= ~(1<< PIN_SDA); // Set SDA to input
+	PORTB |= (1<<PIN_SCL);	// Set clock high
+	uint8_t ack = PORTB & (1<<PIN_SDA); // Read sda pin
+	PORTB &= ~(1<<PIN_SCL); // Set clock low
+	DDRB |= (1 << PIN_SDA); // Set SDA to output
 	return ack;
+
 }
 
 // controller sends a byte to the bus
 // returns 0 if there's a valid nack, otherwise 1
 void i2c_write_byte(uint8_t data) {
 	USIDR = data;
-	i2c_transfer(USISR_8_BIT_TRANSFER);
-
+	i2c_transfer(USICTN_8_BIT_TRANSFER);
 	// Read acknowledgement from slave
 	i2c_read_ack();
-
 }
