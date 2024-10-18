@@ -1,0 +1,7 @@
+
+# ref projects
+i2c_attiny85_twi/
+ssd1306xled/
+
+*.o
+*.elf

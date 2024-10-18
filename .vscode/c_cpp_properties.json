@@ -1,0 +1,28 @@
+{
+    "configurations": [
+        {
+            "name": "avr-gcc",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:\\msys64\\mingw64\\include",
+                "C:\\msys64\\mingw64\\lib\\gcc\\x86_64-w64-mingw32\\14.2.0\\include"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "C:/msys64/mingw64/bin/avr-gcc.exe",
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++14",
+            "intelliSenseMode": "${default}",
+            "configurationProvider": "ms-vscode.makefile-tools",
+            "compilerArgs": [
+                "-mmcu=attiny85",
+                "-DF_CPU=1000000UL",
+                "-Os"
+            ]
+        }
+    ],
+    "version": 4
+}
