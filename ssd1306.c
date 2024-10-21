@@ -104,8 +104,33 @@ void clear_screen()
 	ssd1306_stop();
 }
 
+void set_page_address(uint8_t start, uint8_t  end)
+{
+	// Start and end must be between 0-7 inclusive
+	ssd1306_start();
+	i2c_write_byte(SSD1306_CONTROL_BYTE_CMD);
+	i2c_write_byte(0x22); 	// Set page address
+	i2c_write_byte(start);		// Start
+	i2c_write_byte(end);		// End
+	ssd1306_stop();
+}
+
+void set_column_address(uint8_t start, uint8_t  end)
+{
+	// Start and end must be between 0-127 inclusive
+	ssd1306_start();
+	i2c_write_byte(SSD1306_CONTROL_BYTE_CMD);
+	i2c_write_byte(0x21); 	// Set column address
+	i2c_write_byte(start);		// Start
+	i2c_write_byte(end);	// End
+	ssd1306_stop();
+}
+
 void draw_lines()
 {
+	set_column_address(123, 127);
+	set_page_address(7, 7);
+
 	ssd1306_start();
 	i2c_write_byte(SSD1306_CONTROL_BYTE_DATA);
 	i2c_write_byte(0xFF);

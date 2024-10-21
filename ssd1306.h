@@ -57,6 +57,8 @@ void ssd1306_send_data(int length, const uint8_t data[]);
 void ssd1306_send_progmem_data(int length, const uint8_t data[]);
 
 void clear_screen();
+void set_page_address(uint8_t start, uint8_t  end);
+void set_column_address(uint8_t start, uint8_t  end);
 void draw_lines();
 
 

@@ -1,6 +1,7 @@
 
 #include <util/delay.h> 
 #include <avr/pgmspace.h>
+#include <avr/cpufunc.h>
 
 #include "i2c_t85.h"
 
@@ -33,10 +34,14 @@ void i2c_init() {
 	USICR = (1 << USIWM1) | // Wire Mode (Two-wire mode)
 			(1 << USICS1) | // Clock Source Select
 			(1 << USICLK);  // Clock Strobe
+
 }
 
 void i2c_start() {
-	PORTB &= ~(1<<PIN_SDA); // sda low (start condition)
+	
+	// TODO??? : Delay start until slave has released PIN_SCL
+	
+	PORTB &= ~(1<<PIN_SDA); // sda low
 	PORTB &= ~(1<<PIN_SCL); // scl low	
 	
 	// !!! this is NEEDED !!! BUT WHY, where is the documentation for it ???
@@ -58,21 +63,17 @@ void i2c_transfer(uint8_t usictn_mask) {
 	// Clear USISR flags
 	USISR |= 0xF0;
 
-
-	// WQHY IS THIS HERE ????
-	// Set PIN_SDA high via USIDR
-	USIDR = 0x80;
-
-
 }
 
 uint8_t i2c_read_ack()
 {
-	DDRB &= ~(1<< PIN_SDA); // Set SDA to input
+	// Ensure PIN_SDA isn't set low when PIN_SCL is toggled
+	USIDR = 0xFF;
+	
 	PORTB |= (1<<PIN_SCL);	// Set clock high
-	uint8_t ack = PORTB & (1<<PIN_SDA); // Read sda pin
+	// _NOP();
+	uint8_t ack = PINB & (1<<PIN_SDA);
 	PORTB &= ~(1<<PIN_SCL); // Set clock low
-	DDRB |= (1 << PIN_SDA); // Set SDA to output
 	return ack;
 
 }

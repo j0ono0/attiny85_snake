@@ -35,8 +35,10 @@ int main()
     //==================================================
 
 	i2c_init();
-
 	ssd1306_init();
+
+    set_column_address(0, 127);
+	set_page_address(0, 7);
 	ssd1306_send_progmem_data(default_image_length, image_1); // ssd1306 raw example: show an image
 
     _delay_ms(2000);
