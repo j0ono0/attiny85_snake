@@ -5,96 +5,114 @@
 
 #include "i2c_t85.h"
 
-#define PIN_SDA PB0
-#define PIN_SCL PB2
-
-#define WAIT_LONG  5 
-#define WAIT_SHORT 4 
+#define SDA PB0
+#define SCL PB2
 
 // Counter settings for USISR
 // Note: counter increments on *both* rising and falling edges in i2c mode.
-// Counts twice for each bit transferred.
+// Counter increments twice for each bit transferred.
 #define USICTN_8_BIT_TRANSFER 0x0 
 #define USICTN_1_BIT_TRANSFER  0xe 
 
+#define TOGGLE_CLK() (USICR |= (1 << USITC))
+#define CLEAR_USISR() (USISR = 0xF0)
+
+void green_led_on()
+{
+	DDRB |= (1 << DDB3);
+	PORTB |=  (1 << PB3);   // green LED on
+}
+
+	void sda_down()
+	{
+		PORTB &= ~(1 << SDA);
+	}
+    void sda_release()
+	{
+		PORTB |= (1 << SDA);
+	}
+    void scl_down()
+	{
+		PORTB &= ~(1 << SCL);
+	}
+    void scl_release()
+	{
+		PORTB |= (1 << SCL);
+		// Wait for SCL. 
+		// Slave may hold it low if busy (clock stretching)
+		// Unneeded for ssd1306 interface (?)
+		_NOP();
+		while(!(PINB & (1 << SCL)));
+	}
 
 void i2c_init() {
 
+	DDRB |= (1 << SDA);
+	DDRB |= (1 << SCL);
+
+	sda_release();
+	scl_release();
+	
     // Control regsiter 
 	USICR = (1 << USIWM1) | // Wire Mode (Two-wire mode)
 			(1 << USICS1) | // Clock Source Select
-			(1 << USICLK);  // Clock Strobe
+			(1 << USICLK);  // Clock Select Register
 
-	USISR = (1 << USISIF)| // Start Condition Interrupt Flag
-			(1 << USIOIF)| // Counter Overflow Interrupt Flag
-			(1 << USIPF)|  // Stop Condition Flag
-			(1 << USIDC);  // Data Output Collision
 
-	USISR &= ~0xF; // Set counter to 0 
+	// Status register - Clear flags and reset counter
+	CLEAR_USISR();
 
-	DDRB |= (1 << PIN_SDA);
-	DDRB |= (1 << PIN_SCL);
+	// Data register - Releases SDA?
+	USIDR = 0xFF;
 
-	PORTB |= (1 << PIN_SCL);
-	PORTB |= (1 << PIN_SDA);
-
-	// SDA and SCL are both high and ready for i2c start
 }
 
 void i2c_start() {
-		
-	PORTB &= ~(1<<PIN_SDA); // sda low
-	PORTB &= ~(1<<PIN_SCL); // scl low
-	
-	// !!! this is NEEDED !!! BUT WHY, where is the documentation for it ???
-	PORTB |= (1<<PIN_SDA); 
+	sda_down();
+	scl_down();
+	// Alert if start condition failed
+    if (!(USISR & (1 << USISIF)))
+		green_led_on();
+	// Release SDA
+	sda_release();
 }
 
 void i2c_stop() {
-
-	// Not needed ?! but no gaurantee sda is low after ack ???
-	// PORTB &= ~(1<<PIN_SDA); // sda low
-
-
-	PORTB |= (1<<PIN_SCL);
-	PORTB |= (1<<PIN_SDA);
+	scl_release();
+	sda_release();
 }
 
 void i2c_transfer(uint8_t usictn_mask) {
-	// Set counter
-	USISR |= usictn_mask;
+	// Clear flags and set counter
+	USISR = 0xF0 | usictn_mask;
+	// Transfer data in USIDR
 	while(!(USISR & (1 << USIOIF)))
 	{
-		USICR |= (1 << USITC);
+		TOGGLE_CLK();
 	}
-	// Clear USISR flags and reset counter
-	USISR = 0xF0;
-
 }
 
 uint8_t i2c_read_ack()
 {
-	// Ensure PIN_SDA isn't set low by master when PIN_SCL is toggled
+	// SDA as input
+	DDRB &= ~(1 << SDA);
+	USIDR = 0x0;
+	i2c_transfer(USICTN_1_BIT_TRANSFER);
+	DDRB |= (1 << SDA);
+	// SDA as output
+	uint8_t ack = USIBR;
 	USIDR = 0xFF;
-	
-	PORTB |= (1<<PIN_SCL);	// Set clock high
-	// _NOP();
-	uint8_t ack = PINB & (1<<PIN_SDA);
-	PORTB &= ~(1<<PIN_SCL); // Set clock low
-
-	if(ack != 0)
-	{
-		DDRB |= (1<<PB4);
-    	PORTB |= (1<<PB4);
-	}
-
-	return ack;
-
+	// Convert successful ack as '1' rather than '0'
+	return !ack;
 }
 
 void i2c_write_byte(uint8_t data) {
 	USIDR = data;
 	i2c_transfer(USICTN_8_BIT_TRANSFER);
 	// Read acknowledgement from slave
-	i2c_read_ack();
+	if(!i2c_read_ack())
+	{
+		DDRB |= (1<<PB4);
+    	PORTB |= (1<<PB4);
+	}
 }

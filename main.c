@@ -50,7 +50,7 @@ int main()
 
     while(1)
     {
-        blink_light();
+        //blink_light();
     }
     
     return 0;
