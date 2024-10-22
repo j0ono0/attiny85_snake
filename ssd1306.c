@@ -31,7 +31,7 @@ static const uint8_t PROGMEM ssd1306_initData[] =
     SSD1306_SETSTARTLINE | 0x00,    // First line to start scanning from
     SSD1306_SETCONTRAST, 0x7F,      // contast value to 0x7F according to datasheet
     SSD1306_SEGREMAP | 0x01,        // Use reverse mapping. 0x00 - is normal mapping
-    SSD1306_NORMALDISPLAY,
+    SSD1306_NORMALDISPLAY,			// Normal orientation (ie not inversed)
     SSD1306_SETMULTIPLEX, 63,       // Reset to default MUX. See datasheet
     SSD1306_SETDISPLAYOFFSET, 0x00, // no offset
     SSD1306_SETDISPLAYCLOCKDIV, 0x80,// set to default ratio/osc frequency
@@ -128,8 +128,8 @@ void set_column_address(uint8_t start, uint8_t  end)
 
 void draw_lines()
 {
-	set_column_address(123, 127);
-	set_page_address(7, 7);
+	set_column_address(64, 127);
+	set_page_address(3, 3);
 
 	ssd1306_start();
 	i2c_write_byte(SSD1306_CONTROL_BYTE_DATA);
