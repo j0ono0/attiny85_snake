@@ -1,11 +1,6 @@
 #ifndef i2c_t85_j0ono0_h
 #define i2c_t85_j0ono0_h
 
-    void green_led_on();
-    void sda_down();
-    void sda_release();
-    void scl_down();
-    void scl_release();
     void i2c_init();
     void i2c_start();
     void i2c_stop();

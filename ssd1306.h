@@ -4,17 +4,12 @@
 #include <avr/pgmspace.h>
 #include "i2c_t85.h"
 
-// constant names from https://github.com/tibounise/SSD1306-AVR
 
 #define SSD1306_ADDR_WRITE 0x78
 
 #define SSD1306_CONTROL_BYTE_CMD  0x00
 #define SSD1306_CONTROL_BYTE_DATA 0x40
 
-
-// ---------------------------------------
-// https://github.com/robinvanemden/esp32-ili9341/blob/master/components/ssd1306/src/lcd/ssd1306_commands.h
-/** SSD1306 LCD driver commands */
 
 #define SSD1306_SETLOWCOLUMN      	0x00
 #define SSD1306_SETHIGHCOLUMN     	0x10
@@ -43,10 +38,6 @@
 #define SSD1306_SETVCOMDETECT    	0xDB
 #define SSD1306_SWITCHCAPVCC     	0x02
 #define SSD1306_NOP              	0xE3
-
-#define HORIZONTAL_ADDRESSING_MODE  0x00
-#define VERTICAL_ADDRESSING_MODE    0x01
-#define PAGE_ADDRESSING_MODE        0x02
 
 
 void ssd1306_init();

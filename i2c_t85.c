@@ -1,4 +1,11 @@
 
+/*
+
+Simple i2c master for ATTiny85.
+Designed to work with ssd1603 oled screen
+
+*/
+
 #include <util/delay.h> 
 #include <avr/pgmspace.h>
 #include <avr/cpufunc.h>
@@ -16,70 +23,50 @@
 
 #define TOGGLE_CLK() (USICR |= (1 << USITC))
 #define CLEAR_USISR() (USISR = 0xF0)
+#define SDA_DOWN() (PORTB &= ~(1 << SDA))
+#define SDA_RELEASE() (PORTB |= (1 << SDA))
+#define SCL_DOWN() (PORTB &= ~(1 << SCL))
+#define SCL_RELEASE() (PORTB |= (1 << SCL))
 
-void green_led_on()
-{
-	DDRB |= (1 << DDB3);
-	PORTB |=  (1 << PB3);   // green LED on
-}
 
-	void sda_down()
-	{
-		PORTB &= ~(1 << SDA);
-	}
-    void sda_release()
-	{
-		PORTB |= (1 << SDA);
-	}
-    void scl_down()
-	{
-		PORTB &= ~(1 << SCL);
-	}
-    void scl_release()
-	{
-		PORTB |= (1 << SCL);
-		// Wait for SCL. 
-		// Slave may hold it low if busy (clock stretching)
-		// Unneeded for ssd1306 interface (?)
-		_NOP();
-		while(!(PINB & (1 << SCL)));
-	}
 
 void i2c_init() {
 
 	DDRB |= (1 << SDA);
 	DDRB |= (1 << SCL);
 
-	sda_release();
-	scl_release();
+	SDA_RELEASE();
+	SCL_RELEASE();
 	
     // Control regsiter 
 	USICR = (1 << USIWM1) | // Wire Mode (Two-wire mode)
 			(1 << USICS1) | // Clock Source Select
 			(1 << USICLK);  // Clock Select Register
 
-
 	// Status register - Clear flags and reset counter
 	CLEAR_USISR();
 
 	// Data register - Releases SDA?
 	USIDR = 0xFF;
-
 }
 
 void i2c_start() {
-	sda_down();
-	scl_down();
-	// Alert if start condition failed
-    if (!(USISR & (1 << USISIF)))
-		green_led_on();
+	SDA_DOWN();
+	SCL_DOWN();
+
+    // if (!(USISR & (1 << USISIF)))
+	// {
+	// // Alert if start condition not detected
+	// }
+
+
 	// Release SDA
-	sda_release();
+	SDA_RELEASE();
 }
 
 void i2c_stop() {
-	scl_release();
-	sda_release();
+	SCL_RELEASE();
+	SDA_RELEASE();
 }
 
 void i2c_transfer(uint8_t usictn_mask) {
