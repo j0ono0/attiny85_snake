@@ -19,18 +19,16 @@ void led_off()
 {
 	PORTB &=  ~(1 << PB4); 
 }
-
-// void blink_light()
-// {
-//         // Set built-in LED pin as output
-//     DDRB |= (1 << DDB3);
-//     while (1) {
-//         PORTB |=  (1 << PB3);   // LED on
-//         _delay_ms(1000);
-//         PORTB &= ~(1 << PB3);   // LED off
-//         _delay_ms(500);
-//     }
-// }
+void led_crtl(uint8_t input)
+{
+    if(input > 20)
+        {
+            led_on();
+        } else
+        {
+            led_off();
+        }
+}
 
 
 void draw_box(uint8_t x, uint8_t y)
@@ -123,6 +121,9 @@ int main()
             {
                 for(uint8_t col = 0; col < 128; ++col)
                 {
+                    // Test ADC
+                    led_crtl(read_adc());
+
                     uint8_t bytebuffer = 0x00;
                     for(uint8_t bit = 0; bit < 8; ++bit)
                     {
@@ -145,15 +146,6 @@ int main()
         ssd1306_stop();
         moveboxes(boxarr, sizeof(boxarr)/sizeof(boxarr[0]));
         
-        // Test ADC
-        uint8_t adc = read_adc();
-        if(adc > 20)
-        {
-            led_on();
-        } else
-        {
-            led_off();
-        }
     }
     
     return 0;
