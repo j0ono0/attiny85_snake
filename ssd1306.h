@@ -2,7 +2,7 @@
 #define SSD1306_attiny85_constants_h
 
 #include <avr/pgmspace.h>
-#include "i2c_t85.h"
+#include "t85_i2c.h"
 
 
 #define SSD1306_ADDR_WRITE 0x78

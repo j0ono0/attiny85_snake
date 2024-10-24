@@ -4,5 +4,13 @@
 			"path": ".."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.associations": {
+			"*.jinja": "jinja-html",
+			"*.css": "css",
+			"*.js": "javascript",
+			"delay.h": "c",
+			"pgmspace.h": "c"
+		}
+	}
 }

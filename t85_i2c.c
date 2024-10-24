@@ -6,11 +6,7 @@ Designed to work with ssd1603 oled screen
 
 */
 
-#include <util/delay.h> 
-#include <avr/pgmspace.h>
-#include <avr/cpufunc.h>
-
-#include "i2c_t85.h"
+#include "t85_i2c.h"
 
 #define SDA PB0
 #define SCL PB2

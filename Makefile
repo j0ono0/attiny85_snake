@@ -18,37 +18,35 @@ AVRSIZE = avr-size
 
 SRC = main.c
 
-OBJS = main.o i2c_t85.o ssd1306.o
+OBJS = main.o t85_i2c.o ssd1306.o t85_adc.o
+
+
+## Compile and Program hardware
+all : main.hex
+	avrdude -c usbasp -p $(TARGET) -v -B $(BAUD) -U flash:w:main.hex:i
 
 ## Compile application
 
-all : 
-	${CC} ${CFLAGS} -o ${TARGET}.bin ${SRC}
-	${OBJCOPY} -j .text -j .data -O ihex ${TARGET}.bin ${TARGET}.hex
+build : main.hex
 
-build : build.hex
-
-build.hex : main.elf
+main.hex : main.elf
 	$(OBJCOPY) main.elf -O ihex main.hex
 
 main.elf : $(OBJS)
 	$(CC) $(FLAGS) $(OBJS) -Os -o main.elf
 
 
-main.o : main.c i2c_t85.h
+main.o : main.c t85_i2c.h
 	$(CC) $(FLAGS) -c  main.c
 
-i2c_t85.o : i2c_t85.c i2c_t85.h
-	$(CC) $(FLAGS) -c i2c_t85.c
+t85_i2c.o : t85_i2c.c t85_i2c.h
+	$(CC) $(FLAGS) -c t85_i2c.c
 
 ssd1306.o : ssd1306.c ssd1306.h
 	$(CC) $(FLAGS) -c ssd1306.c
 
-## Program hardware
-
-flash : main.c
-	avrdude -c usbasp -p $(TARGET) -v -B $(BAUD) -U flash:w:main.hex:i
-
+t85_adc.o : t85_adc.c t85_adc.h
+	$(CC) $(FLAGS) -c t85_adc.c
 
 ## 	Utilities
 

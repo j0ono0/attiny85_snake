@@ -1,6 +1,10 @@
 #ifndef i2c_t85_j0ono0_h
 #define i2c_t85_j0ono0_h
 
+    #include <util/delay.h> 
+    #include <avr/pgmspace.h>
+    #include <avr/cpufunc.h>
+
     void i2c_init();
     void i2c_start();
     void i2c_stop();
