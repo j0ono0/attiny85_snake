@@ -10,27 +10,6 @@
 #include "t85_adc.h"
 
 
-void led_on()
-{
-	DDRB |= (1 << DDB4);
-	PORTB |=  (1 << PB4); 
-}
-void led_off()
-{
-	PORTB &=  ~(1 << PB4); 
-}
-void led_crtl(uint8_t input)
-{
-    if(input > 20)
-        {
-            led_on();
-        } else
-        {
-            led_off();
-        }
-}
-
-
 void draw_box(uint8_t x, uint8_t y)
 {
     // draw a box 8x8 pixels into a 8x8 grid
@@ -46,6 +25,41 @@ void draw_box(uint8_t x, uint8_t y)
     }
     ssd1306_stop();
 }
+
+void led_on()
+{
+	DDRB |= (1 << DDB4);
+	PORTB |=  (1 << PB4); 
+}
+void led_off()
+{
+	PORTB &=  ~(1 << PB4); 
+}
+void led_crtl(uint8_t input)
+{
+    // adc returns value between 0 - 254
+    if(input > 220)
+        {
+        clear_screen();
+        draw_box(7, 0);
+        } 
+        else if (input > 205)
+        {
+        clear_screen();
+        draw_box(15, 4);
+        }
+        else if (input > 170)
+        {
+        clear_screen();
+        draw_box(7, 7);
+        }
+        else if (input > 120)
+        {
+        clear_screen();
+        draw_box(0, 4);
+        }
+}
+
 
 // IDEA: space saver - upper nibble as x1, lower nibble as x2
 typedef struct box {
@@ -86,16 +100,16 @@ int main()
     //==================================================
 
 
-    box b1 = {.x1=1, .x2=16, .y1=0, .y2=7, .x_dir=0, .y_dir=1};
-    box b2 = {.x1=10, .x2=17, .y1=50, .y2=57, .x_dir=0, .y_dir=1};
-    box b3 = {.x1=18, .x2=25, .y1=13, .y2=20, .x_dir=0, .y_dir=-1};
-    box b4 = {.x1=27, .x2=34, .y1=40, .y2=47, .x_dir=0, .y_dir=-1};
-    box b5 = {.x1=50, .x2=57, .y1=40, .y2=47, .x_dir=0, .y_dir=1};
-    box b6 = {.x1=70, .x2=77, .y1=30, .y2=37, .x_dir=0, .y_dir=-1};
-    box b7 = {.x1=30, .x2=37, .y1=50, .y2=57, .x_dir=0, .y_dir=1};
-    box b8= {.x1=80, .x2=87, .y1=20, .y2=27, .x_dir=2, .y_dir=2};
+    // box b1 = {.x1=1, .x2=16, .y1=0, .y2=7, .x_dir=0, .y_dir=1};
+    // box b2 = {.x1=10, .x2=17, .y1=50, .y2=57, .x_dir=0, .y_dir=1};
+    // box b3 = {.x1=18, .x2=25, .y1=13, .y2=20, .x_dir=0, .y_dir=-1};
+    // box b4 = {.x1=27, .x2=34, .y1=40, .y2=47, .x_dir=0, .y_dir=-1};
+    // box b5 = {.x1=50, .x2=57, .y1=40, .y2=47, .x_dir=0, .y_dir=1};
+    // box b6 = {.x1=70, .x2=77, .y1=30, .y2=37, .x_dir=0, .y_dir=-1};
+    // box b7 = {.x1=30, .x2=37, .y1=50, .y2=57, .x_dir=0, .y_dir=1};
+    // box b8= {.x1=80, .x2=87, .y1=20, .y2=27, .x_dir=2, .y_dir=2};
     
-    box boxarr[] = {b1, b2, b3, b4, b5, b6, b7, b8};
+    // box boxarr[] = {b1, b2, b3, b4, b5, b6, b7, b8};
 
 	i2c_init();
 	ssd1306_init();
@@ -114,37 +128,38 @@ int main()
 
     while(1)
     {
-        ssd1306_start();
-        i2c_write_byte(SSD1306_CONTROL_BYTE_DATA);
+        led_crtl(read_adc());
+        // ssd1306_start();
+        // i2c_write_byte(SSD1306_CONTROL_BYTE_DATA);
             
-            for(uint8_t page = 0; page < 8; ++page)
-            {
-                for(uint8_t col = 0; col < 128; ++col)
-                {
-                    // Test ADC
-                    led_crtl(read_adc());
+        //     for(uint8_t page = 0; page < 8; ++page)
+        //     {
+        //         for(uint8_t col = 0; col < 128; ++col)
+        //         {
+        //             // Test ADC
+        //             led_crtl(read_adc());
 
-                    uint8_t bytebuffer = 0x00;
-                    for(uint8_t bit = 0; bit < 8; ++bit)
-                    {
-                        uint8_t x = col;
-                        uint8_t y = page * 8 + bit;
+        //             uint8_t bytebuffer = 0x00;
+        //             for(uint8_t bit = 0; bit < 8; ++bit)
+        //             {
+        //                 uint8_t x = col;
+        //                 uint8_t y = page * 8 + bit;
 
-                        for(int i = 0; i < sizeof(boxarr)/sizeof(boxarr[0]); ++i)
-                        {
-                            box *b = &boxarr[i];
-                            if(x >= b->x1 && x <= b->x2 && y >= b->y1 && y <= b->y2 )
-                            {
-                                bytebuffer |= (1 << bit);
-                            }
-                        }
-                    }
-                i2c_write_byte(bytebuffer);
+        //                 for(int i = 0; i < sizeof(boxarr)/sizeof(boxarr[0]); ++i)
+        //                 {
+        //                     box *b = &boxarr[i];
+        //                     if(x >= b->x1 && x <= b->x2 && y >= b->y1 && y <= b->y2 )
+        //                     {
+        //                         bytebuffer |= (1 << bit);
+        //                     }
+        //                 }
+        //             }
+        //         i2c_write_byte(bytebuffer);
 
-                }
-            }
-        ssd1306_stop();
-        moveboxes(boxarr, sizeof(boxarr)/sizeof(boxarr[0]));
+        //         }
+        //     }
+        // ssd1306_stop();
+        // moveboxes(boxarr, sizeof(boxarr)/sizeof(boxarr[0]));
         
     }
     
