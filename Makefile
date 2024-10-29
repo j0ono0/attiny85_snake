@@ -18,7 +18,7 @@ AVRSIZE = avr-size
 
 SRC = main.c
 
-OBJS = main.o t85_i2c.o ssd1306.o t85_adc.o
+OBJS = main.o t85_i2c.o ssd1306.o t85_adc.o t85_pwm.o
 
 
 ## Compile and Program hardware
@@ -47,6 +47,9 @@ ssd1306.o : ssd1306.c ssd1306.h
 
 t85_adc.o : t85_adc.c t85_adc.h
 	$(CC) $(FLAGS) -c t85_adc.c
+
+t85_pwm.o : t85_pwm.c t85_pwm.h
+	$(CC) $(FLAGS) -c t85_pwm.c
 
 ## 	Utilities
 

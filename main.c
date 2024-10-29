@@ -8,6 +8,7 @@
 #include "ssd1306.h"
 #include "t85_i2c.h"
 #include "t85_adc.h"
+#include "t85_pwm.h"
 
 
 void draw_box(uint8_t x, uint8_t y)
@@ -99,6 +100,15 @@ int main()
     CLKPR=0;
     //==================================================
 
+    pwm_config();
+    play_tone(239);
+    play_tone(213);
+    play_tone(190);
+    play_tone(179);
+    play_tone(159);
+    play_tone(142);
+    play_tone(127);
+    play_tone(119);
 
     // box b1 = {.x1=1, .x2=16, .y1=0, .y2=7, .x_dir=0, .y_dir=1};
     // box b2 = {.x1=10, .x2=17, .y1=50, .y2=57, .x_dir=0, .y_dir=1};
