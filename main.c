@@ -9,57 +9,9 @@
 #include "t85_i2c.h"
 #include "t85_adc.h"
 #include "t85_pwm.h"
+#include "input.h"
+#include "engine.h"
 
-
-void draw_box(uint8_t x, uint8_t y)
-{
-    // draw a box 8x8 pixels into a 8x8 grid
-    // screen grid is 16 wide x 8 high
-    set_column_address(x*8, x*8 + 7);
-
-    set_page_address(y, y+1);
-    ssd1306_start();
-    i2c_write_byte(SSD1306_CONTROL_BYTE_DATA);
-    for(int i=0; i < 8; ++i)
-    {
-        i2c_write_byte(0xFF);
-    }
-    ssd1306_stop();
-}
-
-void led_on()
-{
-	DDRB |= (1 << DDB4);
-	PORTB |=  (1 << PB4); 
-}
-void led_off()
-{
-	PORTB &=  ~(1 << PB4); 
-}
-void led_crtl(uint8_t input)
-{
-    // adc returns value between 0 - 254
-    if(input > 220)
-        {
-        clear_screen();
-        draw_box(7, 0);
-        } 
-        else if (input > 205)
-        {
-        clear_screen();
-        draw_box(15, 4);
-        }
-        else if (input > 170)
-        {
-        clear_screen();
-        draw_box(7, 7);
-        }
-        else if (input > 120)
-        {
-        clear_screen();
-        draw_box(0, 4);
-        }
-}
 
 
 // IDEA: space saver - upper nibble as x1, lower nibble as x2
@@ -91,6 +43,9 @@ void moveboxes(box *boxarr, int len)
     }
 }
 
+
+
+
 int main()
 {
     //==================================================
@@ -100,15 +55,27 @@ int main()
     CLKPR=0;
     //==================================================
 
+    ///////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+    ///////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////
+
+
+
+
     pwm_config();
-    play_tone(239);
-    play_tone(213);
-    play_tone(190);
-    play_tone(179);
-    play_tone(159);
-    play_tone(142);
-    play_tone(127);
-    play_tone(119);
+    // play_tone(239);
+    // play_tone(213);
+    // play_tone(190);
+    // play_tone(179);
+    // play_tone(159);
+    // play_tone(142);
+    // play_tone(127);
+    // play_tone(119);
 
     // box b1 = {.x1=1, .x2=16, .y1=0, .y2=7, .x_dir=0, .y_dir=1};
     // box b2 = {.x1=10, .x2=17, .y1=50, .y2=57, .x_dir=0, .y_dir=1};
@@ -138,7 +105,8 @@ int main()
 
     while(1)
     {
-        led_crtl(read_adc());
+
+        btn_ctrl();
         // ssd1306_start();
         // i2c_write_byte(SSD1306_CONTROL_BYTE_DATA);
             

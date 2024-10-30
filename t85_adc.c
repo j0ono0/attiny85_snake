@@ -1,6 +1,8 @@
 
 #include "t85_adc.h"
 
+#define AVG_COUNT 20
+
 void init_adc()
 {
     ADMUX |= (1 << ADLAR) |                 // Left adjust result (8bit accuracy return result 0-254
@@ -12,7 +14,13 @@ void init_adc()
 
 uint8_t read_adc()
 {
-    ADCSRA |= (1 << ADSC);          // Start Conversion
-    while(!(ADCSRA & (1 << ADSC))); // Wait for conversion to complete
-    return ADCH;
+    int val = 0;
+    for (int i =0; i < AVG_COUNT; i++)
+    {
+        // _delay_ms(3);
+        ADCSRA |= (1 << ADSC);          // Start Conversion
+        while(!(ADCSRA & (1 << ADSC))); // Wait for conversion to complete
+        val += ADCH;
+    }
+    return val / AVG_COUNT;
 }

@@ -1,6 +1,7 @@
 #ifndef ADC_attiny85_constants_h
 #define ADC_attiny85_constants_h
 
+#include <util/delay.h> 
 #include <avr/io.h>
 
 

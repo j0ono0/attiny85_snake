@@ -11,43 +11,28 @@ void pwm_config()
 {
 
 
-    // TCCR0A |= (1 << WGM02) |(1 << WGM01) | (1 << WGM00); // Fast PWM
-    // TCCR0A |= (1 << COM0B1) | (1 << COM0B0); // 
-
-    // TCCR0B |= (1 << CS02) | (1 << CS00);
-    // // TCCR0B |= (1 << CS01) ;
-
-    // // OCR0A = 127;
-    // OCR0B = 127;
-
 //////////////////////////////////////////////////////////
 
-    TCCR1 |= //(1 << CTC1) |      // Clear Timer/Counter on Compare Match
-             (1 << PWM1A) |     // Pulse Width Modulator A Enable
-             (1 << COM1A1) |    // OC1x cleared on compare match. Set when TCNT1 = $00.
-             
-             //(1 << CS13) | (1 << CS12) | (1 << CS11) | (1 << CS10); // Prescaler CK/16384
-            // (1 << CS13) | (1 << CS12) | (1 << CS11) ; // CK/8192
-            //  (1 << CS13) | (1 << CS12)  ; // CK/2048
-            // (1 << CS13) | (1 << CS11) | (1 << CS10) ; // CK/1024
-            //  (1 << CS13) | (1 << CS11)  ; // CK/512
-            //  (1 << CS13); // CK/128
-             (1 << CS12) | (1 << CS11)  ; // CK/32
+    TCCR1 |= (1 << PWM1A) |                 // Pulse Width Modulator A Enable
+             (1 << COM1A1) |                // OC1x cleared on compare match. Set when TCNT1 = $00.
+             (1 << CS12) | (1 << CS11)  ;   // CK/32
 
     TCNT1 = 0x00;
 
+
+
+    //5th octave
+    // uint8_t tone_c5 = 239;
+    // uint8_t tone_d5 = 213;
+    // uint8_t tone_e5 = 190;
+    // uint8_t tone_f5 = 179;
+    // uint8_t tone_g5 = 159;
+    // uint8_t tone_a5 = 142;
+    // uint8_t tone_b5 = 127;
+    // 6th octave
+    // uint8_t tone_c6 =119;
+
     uint8_t tone_val = 240;
-
-
-    // uint8_t tone_c = 239;
-    // uint8_t tone_d = 213;
-    // uint8_t tone_e = 190;
-    // uint8_t tone_f = 179;
-    // uint8_t tone_g = 159;
-    // uint8_t tone_a = 142;
-    // uint8_t tone_b = 127;
-    // uint8_t tone_c1 =119;
-
     OCR1C  = tone_val;
     OCR1A = tone_val / 2;
 
@@ -55,7 +40,6 @@ void pwm_config()
 
 void play_tone(uint8_t tone)
 {
-    
     OCR1C  = tone;
     OCR1A = tone / 2;
     DDRB |= (1<<PB1); // set PB1 as output to enable PWM output
