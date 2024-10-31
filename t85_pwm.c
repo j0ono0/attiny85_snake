@@ -43,7 +43,9 @@ void play_tone(uint8_t tone)
     OCR1C  = tone;
     OCR1A = tone / 2;
     DDRB |= (1<<PB1); // set PB1 as output to enable PWM output
-    _delay_ms(200);
+}
+
+void stop_tone()
+{
     DDRB &= ~(1<<PB1); // PB1 disable PWM output
-    _delay_ms(25);
 }

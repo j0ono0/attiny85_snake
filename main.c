@@ -8,7 +8,7 @@
 
 #include "ssd1306.h"
 #include "t85_i2c.h"
-#include "t85_adc.h"
+#include "t85_adc.h" // button input
 #include "t85_pwm.h"
 #include "engine.h"
 
@@ -16,12 +16,13 @@
 int intr_count=0;
 ISR (TIMER0_COMPA_vect)
 {
-    if (intr_count++ == 100) //waiting for 100 count because to get 1 sec compare match should occur 100 times
+    if (intr_count++ == 25) //waiting for 100 count because to get 1 sec compare match should occur 100 times
     {
         toggle_led();
+        play_tune();
         intr_count=0; //making intr_count=0 to continue the process
     }
-    // else intr_count++; //incrementing intr_count 
+
 }
 
 // IDEA: space saver - upper nibble as x1, lower nibble as x2
@@ -87,25 +88,18 @@ int main()
 
 
     pwm_config();
-    // play_tone(239);
-    // play_tone(213);
-    // play_tone(190);
-    // play_tone(179);
-    // play_tone(159);
-    // play_tone(142);
-    // play_tone(127);
-    // play_tone(119);
 
-    // box b1 = {.x1=1, .x2=16, .y1=0, .y2=7, .x_dir=0, .y_dir=1};
-    // box b2 = {.x1=10, .x2=17, .y1=50, .y2=57, .x_dir=0, .y_dir=1};
-    // box b3 = {.x1=18, .x2=25, .y1=13, .y2=20, .x_dir=0, .y_dir=-1};
-    // box b4 = {.x1=27, .x2=34, .y1=40, .y2=47, .x_dir=0, .y_dir=-1};
-    // box b5 = {.x1=50, .x2=57, .y1=40, .y2=47, .x_dir=0, .y_dir=1};
-    // box b6 = {.x1=70, .x2=77, .y1=30, .y2=37, .x_dir=0, .y_dir=-1};
-    // box b7 = {.x1=30, .x2=37, .y1=50, .y2=57, .x_dir=0, .y_dir=1};
-    // box b8= {.x1=80, .x2=87, .y1=20, .y2=27, .x_dir=2, .y_dir=2};
+
+    box b1 = {.x1=1, .x2=16, .y1=0, .y2=7, .x_dir=0, .y_dir=1};
+    box b2 = {.x1=10, .x2=17, .y1=50, .y2=57, .x_dir=0, .y_dir=1};
+    box b3 = {.x1=18, .x2=25, .y1=13, .y2=20, .x_dir=0, .y_dir=-1};
+    box b4 = {.x1=27, .x2=34, .y1=40, .y2=47, .x_dir=0, .y_dir=-1};
+    box b5 = {.x1=50, .x2=57, .y1=40, .y2=47, .x_dir=0, .y_dir=1};
+    box b6 = {.x1=70, .x2=77, .y1=30, .y2=37, .x_dir=0, .y_dir=-1};
+    box b7 = {.x1=30, .x2=37, .y1=50, .y2=57, .x_dir=0, .y_dir=1};
+    box b8= {.x1=80, .x2=87, .y1=20, .y2=27, .x_dir=2, .y_dir=2};
     
-    // box boxarr[] = {b1, b2, b3, b4, b5, b6, b7, b8};
+    box boxarr[] = {b1, b2, b3, b4, b5, b6, b7, b8};
 
 	i2c_init();
 	ssd1306_init();
@@ -121,42 +115,88 @@ int main()
 	// ssd1306_send_progmem_data(default_image_length, image_2); // ssd1306 raw example: show an image
     // _delay_ms(1000);
 
+    bool processed = false;
 
     while(1)
     {
+        enum btn_input btn = read_buttons();
 
-        btn_ctrl();
-        // ssd1306_start();
-        // i2c_write_byte(SSD1306_CONTROL_BYTE_DATA);
+        if(btn == BTN_NULL)
+        {
+        processed = false;
+        set_column_address(0, 127);
+        set_page_address(0, 7);
+        ssd1306_start();
+        i2c_write_byte(SSD1306_CONTROL_BYTE_DATA);
             
-        //     for(uint8_t page = 0; page < 8; ++page)
-        //     {
-        //         for(uint8_t col = 0; col < 128; ++col)
-        //         {
-        //             // Test ADC
-        //             led_crtl(read_adc());
+            for(uint8_t page = 0; page < 8; ++page)
+            {
+                for(uint8_t col = 0; col < 128; ++col)
+                {
 
-        //             uint8_t bytebuffer = 0x00;
-        //             for(uint8_t bit = 0; bit < 8; ++bit)
-        //             {
-        //                 uint8_t x = col;
-        //                 uint8_t y = page * 8 + bit;
+                    uint8_t bytebuffer = 0x00;
+                    for(uint8_t bit = 0; bit < 8; ++bit)
+                    {
+                        uint8_t x = col;
+                        uint8_t y = page * 8 + bit;
 
-        //                 for(int i = 0; i < sizeof(boxarr)/sizeof(boxarr[0]); ++i)
-        //                 {
-        //                     box *b = &boxarr[i];
-        //                     if(x >= b->x1 && x <= b->x2 && y >= b->y1 && y <= b->y2 )
-        //                     {
-        //                         bytebuffer |= (1 << bit);
-        //                     }
-        //                 }
-        //             }
-        //         i2c_write_byte(bytebuffer);
+                        for(int i = 0; i < sizeof(boxarr)/sizeof(boxarr[0]); ++i)
+                        {
+                            box *b = &boxarr[i];
+                            if(x >= b->x1 && x <= b->x2 && y >= b->y1 && y <= b->y2 )
+                            {
+                                bytebuffer |= (1 << bit);
+                            }
+                        }
+                    }
+                i2c_write_byte(bytebuffer);
 
-        //         }
-        //     }
-        // ssd1306_stop();
-        // moveboxes(boxarr, sizeof(boxarr)/sizeof(boxarr[0]));
+                }
+            }
+        ssd1306_stop();
+        moveboxes(boxarr, sizeof(boxarr)/sizeof(boxarr[0]));
+        }
+        
+        else if (btn == BTN_N)
+        {
+            if(processed == false)
+            {
+                clear_screen();
+                processed = true;
+            }
+            draw_box(7, 0);
+        }
+        else if (btn == BTN_E)
+        {
+            if(processed == false)
+            {
+                clear_screen();
+                processed = true;
+            }
+            draw_box(14, 3);
+        }
+        else if (btn == BTN_W)
+        {
+            if(processed == false)
+            {
+                clear_screen();
+                processed = true;
+            }
+            draw_box(0, 3);
+        }
+        else if (btn == BTN_S)
+        {
+            if(processed == false)
+            {
+                clear_screen();
+                processed = true;
+            }
+            draw_box(7, 7);
+        }
+        else
+        {
+            clear_screen();
+        }
         
     }
     

@@ -1,6 +1,11 @@
 
 #include "t85_adc.h"
 
+
+
+BtnHandler bh = {.current = BTN_NULL, .processed = false};
+
+
 #define AVG_COUNT 20
 
 void init_adc()
@@ -23,4 +28,60 @@ uint16_t read_adc()
         val += ADCH<<8 | low_byte;
     }
     return val / AVG_COUNT;
+}
+
+void update_bh(enum btn_input input)
+{
+            bh.current = input;
+            bh.processed  = false;
+    //  if(bh.current != input)
+    //     {
+    //     }
+}
+
+enum btn_input read_buttons()
+{
+    // TODO?: inverse the checking order for default action to return BTN_NULL
+
+    int val = read_adc();
+
+    if (val < 10)
+    {
+        return BTN_NULL;
+        // update_bh(BTN_NULL);
+    } 
+    // button is pressed
+    if (val < 520)
+    {
+        return BTN_N;
+        // update_bh(BTN_N);
+    }
+    else if (val < 710)
+    {
+        return BTN_E;
+        // update_bh(BTN_W);
+    }
+    else if (val < 870)
+    {
+        return BTN_S;
+        // update_bh(BTN_S);
+    }
+    else
+    {
+        return BTN_W;
+        // update_bh(BTN_E);
+    }
+}
+
+enum btn_input current_button()
+{
+    return bh.current;
+}
+bool button_processed()
+{
+    return bh.processed;
+}
+void mark_button_processed()
+{
+    bh.processed = true;
 }

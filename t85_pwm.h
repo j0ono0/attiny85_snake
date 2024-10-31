@@ -4,5 +4,6 @@
 
     void pwm_config();
     void play_tone(uint8_t tone);
+    void stop_tone();
 
 #endif

@@ -1,38 +1,7 @@
 #include "engine.h"
 
 
-#define BTN_HISTORY_LEN 20
-uint8_t button_history[BTN_HISTORY_LEN];
-uint8_t button_index = 0;
 
-
-void btn_ctrl()
-{
-
-    int val = read_adc();
-
-    if (val < 10)
-    {
-        // No buttons pressed
-        clear_screen();
-    } 
-    else  if (val < 520)
-    {
-        draw_box(7, 0);
-    }
-    else if (val < 710)
-    {
-        draw_box(15, 4);
-    }
-    else if (val < 870)
-    {
-        draw_box(7, 7);  
-    }
-    else
-    {
-        draw_box(0, 4);
-    }
-}
 
 
 void draw_box(uint8_t x, uint8_t y)
@@ -66,4 +35,25 @@ void led_off()
 void toggle_led()
 {
     PORTB ^= (1 << PB4);
+}
+
+void play_tune()
+{
+    static bool playing = false;
+    static int8_t i = 0;
+
+    uint8_t tune[] = {239, 213, 190, 179, 159, 142, 127, 119};
+    uint8_t length = sizeof(tune) / sizeof(tune[0]);
+
+    if (!playing)
+    {
+        playing = true;
+        play_tone(tune[i]);
+        i = (i + 1) % length;
+    }
+    else
+    {
+        stop_tone();
+        playing = false;
+    }
 }
