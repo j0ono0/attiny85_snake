@@ -18,7 +18,7 @@ AVRSIZE = avr-size
 
 SRC = main.c
 
-OBJS = main.o engine.o t85_i2c.o ssd1306.o t85_adc.o t85_pwm.o input.o
+OBJS = main.o engine.o t85_i2c.o ssd1306.o t85_adc.o t85_pwm.o
 
 
 ## Compile and Program hardware
@@ -41,7 +41,7 @@ main.o : main.c t85_i2c.h
 
 input.o : engine.c engine.h
 	$(CC) $(FLAGS) -c engine.c
-	
+
 t85_i2c.o : t85_i2c.c t85_i2c.h
 	$(CC) $(FLAGS) -c t85_i2c.c
 
@@ -53,9 +53,6 @@ t85_adc.o : t85_adc.c t85_adc.h
 
 t85_pwm.o : t85_pwm.c t85_pwm.h
 	$(CC) $(FLAGS) -c t85_pwm.c
-
-input.o : input.c input.h
-	$(CC) $(FLAGS) -c input.c
 
 
 ## 	Utilities

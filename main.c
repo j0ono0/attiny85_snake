@@ -3,16 +3,26 @@
 #include <avr/io.h>
 #include <stdio.h>
 #include <util/delay.h> 
-#include <avr/pgmspace.h> // ssd1306
+#include <avr/pgmspace.h>
+#include <avr/interrupt.h>
 
 #include "ssd1306.h"
 #include "t85_i2c.h"
 #include "t85_adc.h"
 #include "t85_pwm.h"
-#include "input.h"
 #include "engine.h"
 
 
+int intr_count=0;
+ISR (TIMER0_COMPA_vect)
+{
+    if (intr_count++ == 100) //waiting for 100 count because to get 1 sec compare match should occur 100 times
+    {
+        toggle_led();
+        intr_count=0; //making intr_count=0 to continue the process
+    }
+    // else intr_count++; //incrementing intr_count 
+}
 
 // IDEA: space saver - upper nibble as x1, lower nibble as x2
 typedef struct box {
@@ -57,8 +67,17 @@ int main()
 
     ///////////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////
+    TCCR0A = 0x00;
+    TCCR0B = 0x00;
 
+    TCCR0A  |= (1 << WGM01); // Mode 2.  Clear Timer on Compare Match (CTC) mode
+    TCCR0B |= (1 << CS02) | (1 << CS00); // Clk/1024 prescale
+    
+    OCR0A = 78;
+    TCNT0 = 0;
 
+    sei();   //enabling global interrupts
+    TIMSK|=(1<<OCIE0A); // enable specific interrupt 
 
 
     ///////////////////////////////////////////////////////////////////////////////////

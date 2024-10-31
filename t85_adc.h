@@ -6,7 +6,7 @@
 
 
 void init_adc();
-uint8_t read_adc();
+uint16_t read_adc();
 
 
 #endif

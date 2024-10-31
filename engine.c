@@ -10,24 +10,28 @@ void btn_ctrl()
 {
 
     int val = read_adc();
-    if(val < 120)
+
+    if (val < 10)
     {
+        // No buttons pressed
         clear_screen();
-    }
-    else if ( val < 135)
+    } 
+    else  if (val < 520)
     {
         draw_box(7, 0);
     }
-    else if (val < 180){
+    else if (val < 710)
+    {
         draw_box(15, 4);
     }
-    else if (val < 223) {
-        draw_box(7, 7);
+    else if (val < 870)
+    {
+        draw_box(7, 7);  
     }
-    else{
+    else
+    {
         draw_box(0, 4);
     }
-
 }
 
 
@@ -54,8 +58,12 @@ void led_on()
 	PORTB |=  (1 << PB4); 
 }
 
-
 void led_off()
 {
 	PORTB &=  ~(1 << PB4); 
+}
+
+void toggle_led()
+{
+    PORTB ^= (1 << PB4);
 }
