@@ -11,8 +11,7 @@ void draw_box(uint8_t x, uint8_t y)
     set_column_address(x*8, x*8 + 7);
 
     set_page_address(y, y+1);
-    ssd1306_start();
-    i2c_write_byte(SSD1306_CONTROL_BYTE_DATA);
+    ssd1306_start_data();
     for(int i=0; i < 8; ++i)
     {
         i2c_write_byte(0xFF);
@@ -53,7 +52,7 @@ void play_tune()
     }
     else
     {
-        stop_tone();
         playing = false;
+        stop_tone();
     }
 }

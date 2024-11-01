@@ -1,12 +1,9 @@
 
 #include "t85_adc.h"
 
+#define BTN_INPUT_LEN 6
+#define BTN_COUNT_THRESHOLD 80
 
-
-BtnHandler bh = {.current = BTN_NULL, .processed = false};
-
-
-#define AVG_COUNT 20
 
 void init_adc()
 {
@@ -18,70 +15,48 @@ void init_adc()
 
 uint16_t read_adc()
 {
-    uint32_t val = 0;
-    for (int i =0; i < AVG_COUNT; i++)
-    {
-        // _delay_ms(3);
+
         ADCSRA |= (1 << ADSC);          // Start Conversion
         while(!(ADCSRA & (1 << ADSC))); // Wait for conversion to complete
         uint8_t low_byte = ADCL;
-        val += ADCH<<8 | low_byte;
-    }
-    return val / AVG_COUNT;
-}
-
-void update_bh(enum btn_input input)
-{
-            bh.current = input;
-            bh.processed  = false;
-    //  if(bh.current != input)
-    //     {
-    //     }
+        return ADCH<<8 | low_byte;
 }
 
 enum btn_input read_buttons()
 {
-    // TODO?: inverse the checking order for default action to return BTN_NULL
+    // Log button readings
+    uint8_t count[BTN_INPUT_LEN] = {0};
 
-    int val = read_adc();
-
-    if (val < 10)
+    for(int i = 0; i < 500; ++i)
     {
-        return BTN_NULL;
-        // update_bh(BTN_NULL);
-    } 
-    // button is pressed
-    if (val < 520)
-    {
-        return BTN_N;
-        // update_bh(BTN_N);
+        cli();
+        int val = read_adc();
+        sei();
+        if (val < 940 && val > 920 ) // 930
+        {
+            if(++count[BTN_N] >= BTN_COUNT_THRESHOLD)
+                return BTN_N;
+        }
+        else if (val < 863 && val > 843) // 853
+        {
+            if(++count[BTN_E] >= BTN_COUNT_THRESHOLD)
+                return BTN_E;
+        }
+        else if (val < 711 && val > 691) // 701
+        {
+            if(++count[BTN_S] >= BTN_COUNT_THRESHOLD)
+                return BTN_S;
+        }
+        else if (val < 522 && val > 502) // 512
+        {
+            if(++count[BTN_W] >= BTN_COUNT_THRESHOLD)
+                return BTN_W;
+        }
+        else if(val < 50)
+        { 
+            if(++count[BTN_NULL] >= BTN_COUNT_THRESHOLD)
+                return BTN_NULL;
+        }
     }
-    else if (val < 710)
-    {
-        return BTN_E;
-        // update_bh(BTN_W);
-    }
-    else if (val < 870)
-    {
-        return BTN_S;
-        // update_bh(BTN_S);
-    }
-    else
-    {
-        return BTN_W;
-        // update_bh(BTN_E);
-    }
-}
-
-enum btn_input current_button()
-{
-    return bh.current;
-}
-bool button_processed()
-{
-    return bh.processed;
-}
-void mark_button_processed()
-{
-    bh.processed = true;
+    return BTN_ERROR;
 }

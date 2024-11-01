@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <util/delay.h> 
 #include <avr/io.h>
+#include <avr/interrupt.h>
 
 
 enum btn_input {
@@ -11,20 +12,12 @@ enum btn_input {
     BTN_E,
     BTN_S,
     BTN_W,
-    BTN_NULL
+    BTN_NULL,
+    BTN_ERROR
 };
-
-
-typedef struct {
-    enum btn_input current;
-    bool processed;
-} BtnHandler;
 
 void init_adc();
 uint16_t read_adc();
 enum btn_input read_buttons();
-enum btn_input current_button();
-bool button_processed();
-void mark_button_processed();
 
 #endif

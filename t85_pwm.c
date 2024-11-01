@@ -1,8 +1,7 @@
 
 //https://hackaday.io/project/184848-storing-and-playing-back-lofi-audio-on-an-mcu/log/206218-pwm-on-attiny85
 
-#include <util/delay.h> 
-#include<avr/io.h>
+
 #include "t85_pwm.h"
 
 // #define F_CPU 16500000UL

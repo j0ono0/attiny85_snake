@@ -42,6 +42,8 @@
 
 void ssd1306_init();
 void ssd1306_start();
+void ssd1306_start_data();
+void ssd1306_start_cmd();
 void ssd1306_stop();
 void ssd1306_send_commands(int length, const uint8_t commands[]);
 void ssd1306_send_data(int length, const uint8_t data[]);
