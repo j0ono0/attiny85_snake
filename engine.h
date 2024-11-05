@@ -10,12 +10,12 @@
 
     // IDEA: space saver - upper nibble as x1, lower nibble as x2
     typedef struct box {
-        uint8_t x1;
-        uint8_t x2;
-        uint8_t y1;
-        uint8_t y2;
-        uint8_t x_dir;
-        uint8_t y_dir;
+        int8_t x1;
+        int8_t x2;
+        int8_t y1;
+        int8_t y2;
+        int8_t x_dir;
+        int8_t y_dir;
     } box;
 
     void audio_config();
