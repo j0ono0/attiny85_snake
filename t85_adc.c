@@ -2,7 +2,7 @@
 #include "t85_adc.h"
 
 #define BTN_INPUT_LEN 6
-#define BTN_COUNT_THRESHOLD 80
+#define BTN_COUNT_THRESHOLD 20
 
 
 void init_adc()
