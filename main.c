@@ -8,9 +8,11 @@
 
 #include "ssd1306.h"
 #include "t85_i2c.h"
-#include "t85_adc.h" // button input
+#include "user_input.h" // button input
 #include "audio.h"
 #include "engine.h"
+
+
 
 
 #define max(a,b)             \
@@ -27,69 +29,40 @@
     _a < _b ? _a : _b;       \
 })
 
+uint8_t ptn2[] = {0xFF, 0x81, 0xA5, 0x99, 0x99, 0xA5, 0x81, 0xFF};
+uint8_t ptn1[] = {0xFF, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0xFF};
+enum btn_input btn;
+cell snake[10];
+uint8_t snake_len = 0;
 
 
 
-// bool collision = false; // Track plr collision status
-
-box plr = {.x1=0, .x2=15, .y1=56, .y2=60, .x_dir=0, .y_dir=0};
-box ball1 = {.x1=16, .x2=20, .y1=16, .y2=20, .x_dir=2, .y_dir=2};
-
-box b1 = {.x1=1, .x2=15, .y1=9, .y2=13, .x_dir=0, .y_dir=0};
-box b2 = {.x1=17, .x2=31, .y1=9, .y2=13, .x_dir=0, .y_dir=0};
-box b3 = {.x1=33, .x2=47, .y1=9, .y2=13, .x_dir=0, .y_dir=0};
-box b4 = {.x1=49, .x2=63, .y1=9, .y2=13, .x_dir=0, .y_dir=0};
-box b5 = {.x1=65, .x2=79, .y1=9, .y2=13, .x_dir=0, .y_dir=-0};
-box b6 = {.x1=81, .x2=95, .y1=9, .y2=13, .x_dir=0, .y_dir=0};
-box b7= {.x1=97, .x2=111, .y1=9, .y2=13, .x_dir=0, .y_dir=0};
-box b8= {.x1=113, .x2=127, .y1=9, .y2=13, .x_dir=0, .y_dir=0};
-
-box *entityArray[] = {&b1, &b2, &b3, &b4, &b5, &b6, &b7, &b8, &plr, &ball1};
-
-
-
-
-void movePlr(box *plr)
+bool move_snake(int8_t dx, int8_t dy)
 {
-    // Limit movement to screen boundaries
-    if(plr->x_dir < 0)
+    // Check game boundaries
+    if(
+        snake[0].x + dx + CELL_SIZE >= DISPLAY_WIDTH || 
+        snake[0].x + dx < 0 ||
+        snake[0].y + dy + CELL_SIZE >= DISPLAY_HEIGHT || 
+        snake[0].y + dy < 0
+    )
     {
-        // Moving left
-        plr->x_dir = max(-1*plr->x1, plr->x_dir);
+        return false;
     }
-    else if ((127 - plr->x2) < plr->x_dir)
+    // Move body cells into next location
+    for(uint8_t i = snake_len; i > 0; --i)
     {
-        // Moving right
-        plr->x_dir = 127 - plr->x2;
+        snake[i].x = snake[i-1].x; 
+        snake[i].y = snake[i-1].y; 
     }
-    // update box corners
-    plr->x1 += plr->x_dir;
-    plr->x2 += plr->x_dir;
-    plr->y1 += plr->y_dir;
-    plr->y2 += plr->y_dir;
 
+    // Move snake head
+    snake[0].x += dx * CELL_SIZE;
+    snake[0].y += dy * CELL_SIZE;
+    return true;
 }
 
-void moveBall(box *ball, box **eArr)
-{
-    // update box corners
-    ball->x1 += ball->x_dir;
-    ball->x2 += ball->x_dir;
-    ball->y1 += ball->y_dir;
-    ball->y2 += ball->y_dir;
-    // Bounce off display sides
-    if(ball->x1 <= 0)
-    {
-        ball->x_dir *= -1;
-    } 
-    if(ball->x2 >= 127)
-    {
-        ball->x_dir *= -1;
-    } 
-
-}
-
-void render_display()
+void render2()
 {
     set_column_address(0, 127);
     set_page_address(0, 7);
@@ -98,19 +71,75 @@ void render_display()
     {
         for(uint8_t col = 0; col < 128; ++col)
         {
+            uint8_t x = col;
+            uint8_t y = page * 8;
+            uint8_t bytebuffer = 0x0;
+            for(int i = 0; i < snake_len; ++i)
+            {
+                cell *asset = &snake[i];
+                if( 
+                    x >= asset->x && 
+                    y >= asset->y && 
+                    x < asset->x + CELL_SIZE && 
+                    y < asset->y + CELL_SIZE
+                )
+                {
+                    uint8_t ax = x - asset->x;
+                    uint8_t ay = y - asset->y;
+                    bytebuffer = (ptn1[ax] >> ay);
+                    break;
+                }
+            }
+            i2c_write_byte(bytebuffer);
+        }
+    }
 
+    ssd1306_stop();
+}
+
+
+void render_display()
+{
+    set_column_address(0, 127);
+    set_page_address(0, 7);
+    ssd1306_start_data();
+
+    for(uint8_t page = 0; page < 8; ++page)
+    {
+        for(uint8_t col = 0; col < 128; ++col)
+        {
+            
             uint8_t bytebuffer = 0x00;
+
             for(uint8_t bit = 0; bit < 8; ++bit)
             {
                 uint8_t x = col;
                 uint8_t y = page * 8 + bit;
 
-                for(int i = 0; i < sizeof(entityArray)/sizeof(entityArray[0]); ++i)
+                for(int i = 0; i < snake_len; ++i)
                 {
-                    box *b = entityArray[i];
-                    if(x >= b->x1 && x <= b->x2 && y >= b->y1 && y <= b->y2 )
+                    cell *asset = &snake[i];
+
+                    if( 
+                        x >= asset->x && 
+                        x < asset->x + CELL_SIZE && 
+                        y >= asset->y && 
+                        y < asset->y + CELL_SIZE)
                     {
-                        bytebuffer |= (1 << bit);
+
+                        uint8_t *ptn = ptn2;
+                        if(i == 0)
+                        {
+                            ptn = ptn1;
+                        }
+
+                        uint8_t ax = x - asset->x;
+                        uint8_t ay = y - asset->y;
+
+                        if(ptn[ay] & (1 << ax))
+                        {
+                            bytebuffer |= (1 << bit);
+                        }
                     }
                 }
             }
@@ -138,9 +167,32 @@ int main()
     init_adc();
 	i2c_init();
 	ssd1306_init();
+    clear_screen();
+
+    // Set up snake
+    // ============
     
+    // Add Snake head
+    snake[0].x = 64;
+    snake[0].y = 16;
+    ++snake_len;
 
+    // Add x2 body cells
+    snake[1].x = 56;
+    snake[1].y = 16;
+    ++snake_len;
 
+    snake[2].x = 48;
+    snake[2].y = 16;
+    ++snake_len;
+
+    snake[3].x = 40;
+    snake[3].y = 16;
+    ++snake_len;
+
+    snake[4].x = 32;
+    snake[4].y = 16;
+    ++snake_len;
 
 
 
@@ -154,73 +206,37 @@ int main()
         
         // Update display
         //===============
-        render_display();
+        render2();
 
-
+        
+        // Checking for user input
+        btn = read_buttons();
 
         // Read button input
         //==================
 
-        // TODO: Read buttons within long display render. And queue button presses?
-        enum btn_input btn = read_buttons();
         
         if (btn == BTN_N)
         {
-            plr.y_dir = -8;
-            plr.x_dir = 0;
+            move_snake(0, -1);
         }
         else if (btn == BTN_E)
         {
-            plr.x_dir = 8;
-            plr.y_dir = 0;
+            move_snake(1, 0);
         }
         else if (btn == BTN_W)
         {
-            plr.x_dir = -8;
-            plr.y_dir = 0;
+            move_snake(-1, 0);
         }
         else if (btn == BTN_S)
         {
-            plr.y_dir = 8;
-            plr.x_dir = 0;
+            move_snake(0, 1);
         }
-        else
-        { 
-            plr.x_dir = 0;
-            plr.y_dir = 0;
-        }
-
-        movePlr(&plr);
-        moveBall(&ball1, entityArray);
-
-        if (ball1.y2 >= plr.y2)
+        else if (btn == BTN_ERROR)
         {
-            // Ball out-of-bounds
-            start_tune(&riff_lose);
-            while(update_audio());
-
-            // Reset game
-            ball1.x1 = plr.x1+4;
-            ball1.x2 = plr.x1+7;
-            ball1.y1 = plr.y1 - 4;
-            ball1.y2 = plr.y1 - 1;
-            ball1.x_dir = 2;
-            ball1.y_dir = -2;
-
+            led_on();
         }
-        else if(boxes_overlap(&plr, &ball1))
-        {
-            // Plr hits ball
-            ball1.y_dir = -2;
-            start_tune(&riff_rebound_bottom);
-        }
-        else if(ball1.y1 <= 13)
-        {
-            // Plr hits ball
-            ball1.y_dir = 2;
-            start_tune(&riff_rebound_top);
-        }
-    
+  
 
         if(update_audio())
         {
@@ -233,5 +249,7 @@ int main()
 
 
     }
+    
+
     return 0;
 }

@@ -8,18 +8,17 @@
     #include "audio.h"
 
 
-    // IDEA: space saver - upper nibble as x1, lower nibble as x2
-    typedef struct box {
-        int8_t x1;
-        int8_t x2;
-        int8_t y1;
-        int8_t y2;
-        int8_t x_dir;
-        int8_t y_dir;
-    } box;
+    #define DISPLAY_WIDTH 128
+    #define DISPLAY_HEIGHT 64
+    // Cell width and height
+    #define CELL_SIZE 8
 
-    bool boxes_overlap(box *b1, box *b2);
-    void draw_box(uint8_t x, uint8_t y);
+    typedef struct snake_cell {
+        uint8_t x;
+        uint8_t y;
+    } cell;
+
+
     void led_on();
     void led_off();
     void toggle_led();

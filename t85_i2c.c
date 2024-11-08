@@ -72,6 +72,8 @@ void i2c_transfer(uint8_t usictn_mask) {
 	while(!(USISR & (1 << USIOIF)))
 	{
 		TOGGLE_CLK();
+		_delay_us(1);
+		TOGGLE_CLK();
 	}
 }
 

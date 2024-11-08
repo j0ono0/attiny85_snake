@@ -1,8 +1,9 @@
 
-#include "t85_adc.h"
+#include "user_input.h"
 
 #define BTN_INPUT_LEN 6
-#define BTN_COUNT_THRESHOLD 20
+#define BTN_COUNT_THRESHOLD 5
+
 
 
 void init_adc()
@@ -26,8 +27,7 @@ enum btn_input read_buttons()
 {
     // Log button readings
     uint8_t count[BTN_INPUT_LEN] = {0};
-
-    for(int i = 0; i < 500; ++i)
+    for(int i = 0; i < 200; ++i)
     {
         cli();
         int val = read_adc();
