@@ -93,61 +93,51 @@ void render2()
             i2c_write_byte(bytebuffer);
         }
     }
-
     ssd1306_stop();
 }
 
-
-void render_display()
+void render3()
 {
     set_column_address(0, 127);
     set_page_address(0, 7);
     ssd1306_start_data();
-
     for(uint8_t page = 0; page < 8; ++page)
     {
         for(uint8_t col = 0; col < 128; ++col)
         {
-            
-            uint8_t bytebuffer = 0x00;
-
-            for(uint8_t bit = 0; bit < 8; ++bit)
+            uint8_t x = col;
+            uint8_t y = page * 8;
+            uint8_t bytebuffer = 0x0;
+            for(int i = 0; i < snake_len; ++i)
             {
-                uint8_t x = col;
-                uint8_t y = page * 8 + bit;
-
-                for(int i = 0; i < snake_len; ++i)
+                cell *asset = &snake[i];
+                if (
+                    asset->x <= x && asset->x + CELL_SIZE > x
+                )
                 {
-                    cell *asset = &snake[i];
-
-                    if( 
-                        x >= asset->x && 
-                        x < asset->x + CELL_SIZE && 
-                        y >= asset->y && 
-                        y < asset->y + CELL_SIZE)
+                    if(asset->y <= y && asset->y + CELL_SIZE > y)
                     {
-
-                        uint8_t *ptn = ptn2;
-                        if(i == 0)
-                        {
-                            ptn = ptn1;
-                        }
-
-                        uint8_t ax = x - asset->x;
-                        uint8_t ay = y - asset->y;
-
-                        if(ptn[ay] & (1 << ax))
-                        {
-                            bytebuffer |= (1 << bit);
-                        }
+                        int8_t ox = x - asset->x;
+                        int8_t oy = y - asset->y;
+                        bytebuffer = (ptn1[ox] >> oy);
+                        break;
+                    }
+                    else if(asset->y > y && asset->y < y+8)
+                    {
+                        int8_t ox = x - asset->x;
+                        int8_t oy = asset->y - y;
+                        bytebuffer = (ptn1[ox] << oy);
+                        break;
                     }
                 }
             }
-        i2c_write_byte(bytebuffer);
+            i2c_write_byte(bytebuffer);
         }
     }
     ssd1306_stop();
 }
+
+
 
 
 int main()
@@ -173,11 +163,11 @@ int main()
     // ============
     
     // Add Snake head
-    snake[0].x = 64;
-    snake[0].y = 16;
+    snake[0].x = 68;
+    snake[0].y = 20;
     ++snake_len;
 
-    // Add x2 body cells
+    // Add body cells
     snake[1].x = 56;
     snake[1].y = 16;
     ++snake_len;
@@ -206,7 +196,7 @@ int main()
         
         // Update display
         //===============
-        render2();
+        render3();
 
         
         // Checking for user input
