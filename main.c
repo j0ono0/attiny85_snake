@@ -1,40 +1,34 @@
 
 
-#include <avr/io.h>
 #include <stdio.h>
+#include <avr/io.h>
 #include <util/delay.h> 
 #include <avr/pgmspace.h>
-
+#include <avr/interrupt.h>
 
 #include "ssd1306.h"
 #include "t85_i2c.h"
 #include "user_input.h" // button input
 #include "audio.h"
 #include "engine.h"
+#include "timer.h"
 
-
-
-
-#define max(a,b)             \
-({                           \
-    __typeof__ (a) _a = (a); \
-    __typeof__ (b) _b = (b); \
-    _a > _b ? _a : _b;       \
-})
-
-#define min(a,b)             \
-({                           \
-    __typeof__ (a) _a = (a); \
-    __typeof__ (b) _b = (b); \
-    _a < _b ? _a : _b;       \
-})
+uint64_t timemark;
+enum btn_input next_direction;
 
 uint8_t ptn2[] = {0xFF, 0x81, 0xA5, 0x99, 0x99, 0xA5, 0x81, 0xFF};
 uint8_t ptn1[] = {0xFF, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0xFF};
+uint8_t ptn0[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 enum btn_input btn;
 cell snake[10];
 uint8_t snake_len = 0;
 
+void init_timer()
+{
+    
+    TCCR1 |= (1 << CTC1)                                        // Clear Timer/Counter on Compare Match
+          | (1 << CS13)| (1 << CS12)| (1 << CS11)| (1 << CS10); // CK/16384
+}
 
 
 bool move_snake(int8_t dx, int8_t dy)
@@ -62,39 +56,7 @@ bool move_snake(int8_t dx, int8_t dy)
     return true;
 }
 
-void render2()
-{
-    set_column_address(0, 127);
-    set_page_address(0, 7);
-    ssd1306_start_data();
-    for(uint8_t page = 0; page < 8; ++page)
-    {
-        for(uint8_t col = 0; col < 128; ++col)
-        {
-            uint8_t x = col;
-            uint8_t y = page * 8;
-            uint8_t bytebuffer = 0x0;
-            for(int i = 0; i < snake_len; ++i)
-            {
-                cell *asset = &snake[i];
-                if( 
-                    x >= asset->x && 
-                    y >= asset->y && 
-                    x < asset->x + CELL_SIZE && 
-                    y < asset->y + CELL_SIZE
-                )
-                {
-                    uint8_t ax = x - asset->x;
-                    uint8_t ay = y - asset->y;
-                    bytebuffer = (ptn1[ax] >> ay);
-                    break;
-                }
-            }
-            i2c_write_byte(bytebuffer);
-        }
-    }
-    ssd1306_stop();
-}
+
 
 void render3()
 {
@@ -137,6 +99,38 @@ void render3()
     ssd1306_stop();
 }
 
+void render_tiles()
+{
+    // Render tiles 8x8 size
+    set_column_address(0, 127);
+    set_page_address(0, 7);
+    ssd1306_start_data();
+    
+    uint8_t *pattern;
+
+    for(uint8_t page = 0; page < 8; ++page)
+    {
+        for(uint8_t col = 0; col < 16; ++col)
+        {
+            pattern = ptn0;
+            for(uint8_t i=0; i < snake_len; ++i)
+            {
+                if(snake[i].x == col*8 && snake[i].y == page*8)
+                {
+                    pattern = ptn1;
+                    break;
+                }
+            }
+            for(uint8_t ptn_val = 0; ptn_val < 8; ++ptn_val)
+            {
+                i2c_write_byte(pattern[ptn_val]);
+            }
+        }
+    }
+    
+    ssd1306_stop();
+}
+
 
 
 
@@ -152,7 +146,7 @@ int main()
 
     // Configure hardware
     // ==================
-
+    init_global_timer();
     audio_config();
     init_adc();
 	i2c_init();
@@ -163,8 +157,8 @@ int main()
     // ============
     
     // Add Snake head
-    snake[0].x = 68;
-    snake[0].y = 20;
+    snake[0].x = 64;
+    snake[0].y = 16;
     ++snake_len;
 
     // Add body cells
@@ -185,6 +179,12 @@ int main()
     ++snake_len;
 
 
+    // Set global timer initial value
+    timemark = global_timer();
+
+    // Start snake as stationary
+    next_direction = BTN_NULL;
+
 
 	// ssd1306_send_progmem_data(default_image_length, image_2); // ssd1306 raw example: show an image
     // _delay_ms(1000);
@@ -192,39 +192,45 @@ int main()
 
     while(1)
     {
+        uint64_t _timemark = global_timer();
+        if(_timemark - timemark > 40)
+        {
+            // Move snake
+            switch (next_direction)
+            {
+
+                // Move snake
+                case BTN_N:
+                    move_snake(0, -1);
+                    break;
+                case BTN_E:
+                    move_snake(1, 0);
+                    break;
+                case BTN_S:
+                    move_snake(0, 1);
+                    break;
+                case BTN_W:
+                    move_snake(-1, 0);
+                    break;
+                default:
+                    move_snake(0, 0);
+            }
+
+            // Update display
+            //===============
+            render_tiles();
+
+            // Restart timer
+            timemark = _timemark;
+        }
+
 
         
-        // Update display
-        //===============
-        render3();
-
-        
-        // Checking for user input
+        // Checking for new user input
         btn = read_buttons();
-
-        // Read button input
-        //==================
-
-        
-        if (btn == BTN_N)
+        if(btn != BTN_NULL)
         {
-            move_snake(0, -1);
-        }
-        else if (btn == BTN_E)
-        {
-            move_snake(1, 0);
-        }
-        else if (btn == BTN_W)
-        {
-            move_snake(-1, 0);
-        }
-        else if (btn == BTN_S)
-        {
-            move_snake(0, 1);
-        }
-        else if (btn == BTN_ERROR)
-        {
-            led_on();
+            next_direction = btn;
         }
   
 

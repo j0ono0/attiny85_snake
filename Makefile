@@ -18,7 +18,7 @@ AVRSIZE = avr-size
 
 SRC = main.c
 
-OBJS = main.o engine.o t85_i2c.o ssd1306.o user_input.o audio.o
+OBJS = main.o engine.o t85_i2c.o ssd1306.o user_input.o audio.o timer.o
 
 
 ## Compile and Program hardware
@@ -53,6 +53,9 @@ user_input.o : user_input.c user_input.h
 
 audio.o : audio.c audio.h
 	$(CC) $(FLAGS) -c audio.c
+
+timer.o : timer.c timer.h
+	$(CC) $(FLAGS) -c timer.c
 
 
 ## 	Utilities

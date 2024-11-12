@@ -13,6 +13,7 @@
     // Cell width and height
     #define CELL_SIZE 8
 
+
     typedef struct snake_cell {
         uint8_t x;
         uint8_t y;

@@ -1,14 +1,19 @@
 #include "audio.h"
 
+
+// *******************************************
+
+// TODO: user timer.c for tone durations
+
+// *******************************************
+
+
 const Tune *current_tune = NULL;
 
 uint8_t audio_counter = 0;
 int intr_count=0;
 
-ISR (TIMER0_COMPA_vect)
-{
-    ++intr_count;
-}
+
 
     //5th octave
     // uint8_t tone_c5 = 239;
@@ -35,26 +40,6 @@ const Tune riff_rebound_bottom = {riff_rebound_bottom_data, sizeof(riff_rebound_
 
 void audio_config()
 {
-    
-    
-    // Initialises interrupt on timer/counter
-    // ======================================
-
-    // This is used to change notes in tunes.
-    
-
-    TCCR0A = 0x00;
-    TCCR0B = 0x00;
-
-    TCCR0A  |= (1 << WGM01);                // Mode 2.  Clear Timer on Compare Match (CTC) mode
-    TCCR0B |= (1 << CS02) | (1 << CS00);    // Clk/1024 prescale
-    
-    OCR0A = 195;                            // Sets interrupt to occur every 25ms (at 8MHz clock)
-    TCNT0 = 0;
-
-    TIMSK|=(1<<OCIE0A);                     // enable specific interrupt 
-
-
 
     // Setup PWM for playing tones (square wave) on PB1
     // ================================================
@@ -80,7 +65,6 @@ void stop_tone()
 {
     DDRB &= ~(1<<PB1);                      // PB1 disable PWM output
 }
-
 
 void start_tune(const Tune *riff)
 {
