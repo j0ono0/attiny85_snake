@@ -31,6 +31,18 @@ void init_timer()
 }
 
 
+bool collision(){
+    // test is snake head (snake[0] shares location with other snake cells)
+    for(uint8_t i = 1; i < snake_len; ++i)
+    {
+        if(snake[0].x == snake[i].x && snake[0].y == snake[i].y)
+        { 
+            return true;
+        }
+    }
+    return false;
+}
+
 bool move_snake(int8_t dx, int8_t dy)
 {
     dx *= CELL_SIZE;
@@ -144,8 +156,6 @@ void render_tiles()
 }
 
 
-
-
 int main()
 {
     //==================================================
@@ -205,7 +215,7 @@ int main()
     while(1)
     {
         uint64_t _timemark = global_timer();
-        if(_timemark - timemark > 1)
+        if(_timemark - timemark > 10)
         {
             // Move snake
             switch (next_direction)
@@ -229,15 +239,26 @@ int main()
             }
 
             // Update display
-            //===============
             render_tiles();
+
+            // Check for collision
+            if(collision())
+            {
+                if(!audio_is_playing())
+                {
+                start_tune(&riff_lose);
+                led_on();
+                }
+            }
+            else
+            {
+                led_off();
+            }
 
             // Restart timer
             timemark = _timemark;
         }
 
-
-        
         // Checking for new user input
         btn = read_buttons();
         if(btn != BTN_NULL && btn != BTN_ERROR)
@@ -245,15 +266,7 @@ int main()
             next_direction = btn;
         }
   
-
-        if(update_audio())
-        {
-            led_on();
-        }
-        else
-        {
-            led_off();
-        }
+        update_audio();
 
 
     }

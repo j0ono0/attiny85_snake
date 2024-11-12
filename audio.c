@@ -11,7 +11,7 @@
 const Tune *current_tune = NULL;
 
 uint8_t audio_counter = 0;
-int intr_count=0;
+uint64_t duration_start = 0;
 
 
 
@@ -70,15 +70,18 @@ void start_tune(const Tune *riff)
 {
     current_tune = riff;
     audio_counter = 0;
-    intr_count = 0;
-    sei();
+    duration_start = global_timer();
 }
 
 void stop_tune()
 {
-     current_tune = NULL;
-        stop_tone();
-        cli();
+    current_tune = NULL;
+    stop_tone();
+}
+
+bool audio_is_playing()
+{
+    return current_tune != NULL;
 }
 
 bool update_audio()
@@ -90,10 +93,11 @@ bool update_audio()
     }
 
     //40 count = 1 sec
-    if (intr_count >= current_tune->notes[audio_counter].dur) 
+    uint64_t duration_end = global_timer();
+    if (duration_end - duration_start >= current_tune->notes[audio_counter].dur) 
     {
         ++audio_counter;
-        intr_count=0;
+        duration_start = duration_end;
     }
 
     if(audio_counter >= current_tune->len)

@@ -33,6 +33,7 @@
     void stop_tone();
     void start_tune(const Tune *riff);
     void stop_tune();
+    bool audio_is_playing();
     bool update_audio();
     
 
