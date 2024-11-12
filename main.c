@@ -16,9 +16,9 @@
 uint64_t timemark;
 enum btn_input next_direction;
 
-uint8_t ptn2[] = {0xFF, 0x81, 0xA5, 0x99, 0x99, 0xA5, 0x81, 0xFF};
-uint8_t ptn1[] = {0xFF, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0xFF};
-uint8_t ptn0[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+uint8_t ptn2[] = {0xFF, 0x81, 0xA5, 0x99, 0x99, 0xA5, 0x81, 0xFF}; // X in square
+uint8_t ptn1[] = {0xFF, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0xFF}; // Outlined square
+uint8_t ptn0[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Blank (black)
 enum btn_input btn;
 cell snake[10];
 uint8_t snake_len = 0;
@@ -33,16 +33,21 @@ void init_timer()
 
 bool move_snake(int8_t dx, int8_t dy)
 {
-    // Check game boundaries
-    if(
-        snake[0].x + dx + CELL_SIZE >= DISPLAY_WIDTH || 
-        snake[0].x + dx < 0 ||
-        snake[0].y + dy + CELL_SIZE >= DISPLAY_HEIGHT || 
-        snake[0].y + dy < 0
+    dx *= CELL_SIZE;
+    dy *= CELL_SIZE;
+    // Cancel movement beyond screen boundaries
+    // or if stationary
+    if (
+        (dx == 0 && dy == 0 )||
+        dx + snake[0].x < 0 ||
+        dx + snake[0].x >= DISPLAY_WIDTH - 1 ||
+        dy + snake[0].y < 0 ||
+        dy + snake[0].y >= DISPLAY_HEIGHT - 1
     )
     {
         return false;
     }
+
     // Move body cells into next location
     for(uint8_t i = snake_len; i > 0; --i)
     {
@@ -51,11 +56,10 @@ bool move_snake(int8_t dx, int8_t dy)
     }
 
     // Move snake head
-    snake[0].x += dx * CELL_SIZE;
-    snake[0].y += dy * CELL_SIZE;
+    snake[0].x += dx;
+    snake[0].y += dy;
     return true;
 }
-
 
 
 void render3()
@@ -106,18 +110,26 @@ void render_tiles()
     set_page_address(0, 7);
     ssd1306_start_data();
     
-    uint8_t *pattern;
+    uint8_t *pattern = ptn0;
 
     for(uint8_t page = 0; page < 8; ++page)
     {
         for(uint8_t col = 0; col < 16; ++col)
         {
+            // Set blank tile as default
             pattern = ptn0;
+
+            // Search for snake cell at [col, page] location
             for(uint8_t i=0; i < snake_len; ++i)
             {
                 if(snake[i].x == col*8 && snake[i].y == page*8)
                 {
-                    pattern = ptn1;
+                    if(i == 0)
+                    {
+                        pattern = ptn2;
+                    }else{
+                        pattern = ptn1;
+                    }
                     break;
                 }
             }
@@ -193,7 +205,7 @@ int main()
     while(1)
     {
         uint64_t _timemark = global_timer();
-        if(_timemark - timemark > 40)
+        if(_timemark - timemark > 1)
         {
             // Move snake
             switch (next_direction)
@@ -228,7 +240,7 @@ int main()
         
         // Checking for new user input
         btn = read_buttons();
-        if(btn != BTN_NULL)
+        if(btn != BTN_NULL && btn != BTN_ERROR)
         {
             next_direction = btn;
         }
