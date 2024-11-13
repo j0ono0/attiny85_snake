@@ -14,7 +14,7 @@
     #define CELL_SIZE 8
 
 
-    typedef struct snake_cell {
+    typedef struct tile_location {
         uint8_t x;
         uint8_t y;
     } cell;

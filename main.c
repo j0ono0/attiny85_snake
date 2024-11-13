@@ -1,5 +1,5 @@
 
-
+#include <stdlib.h>
 #include <stdio.h>
 #include <avr/io.h>
 #include <util/delay.h> 
@@ -20,56 +20,70 @@ uint8_t ptn2[] = {0xFF, 0x81, 0xA5, 0x99, 0x99, 0xA5, 0x81, 0xFF}; // X in squar
 uint8_t ptn1[] = {0xFF, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0xFF}; // Outlined square
 uint8_t ptn0[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Blank (black)
 enum btn_input btn;
-cell snake[10];
-uint8_t snake_len = 0;
+// As snake grows head moves along array
+cell assets [128];
+cell *target = &assets[0];
+cell *snake_head = &assets[1];
+uint8_t assets_len = 2;
 
-void init_timer()
+
+bool out_of_bounds(uint8_t x, uint8_t y)
 {
-    
-    TCCR1 |= (1 << CTC1)                                        // Clear Timer/Counter on Compare Match
-          | (1 << CS13)| (1 << CS12)| (1 << CS11)| (1 << CS10); // CK/16384
-}
-
-
-bool collision(){
-    // test is snake head (snake[0] shares location with other snake cells)
-    for(uint8_t i = 1; i < snake_len; ++i)
+    if (x < 0 || y < 0 || x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT)
     {
-        if(snake[0].x == snake[i].x && snake[0].y == snake[i].y)
-        { 
-            return true;
-        }
+        return true;
     }
     return false;
 }
 
-bool move_snake(int8_t dx, int8_t dy)
+bool target_at_location(uint8_t x, uint8_t y)
 {
-    dx *= CELL_SIZE;
-    dy *= CELL_SIZE;
-    // Cancel movement beyond screen boundaries
-    // or if stationary
-    if (
-        (dx == 0 && dy == 0 )||
-        dx + snake[0].x < 0 ||
-        dx + snake[0].x >= DISPLAY_WIDTH - 1 ||
-        dy + snake[0].y < 0 ||
-        dy + snake[0].y >= DISPLAY_HEIGHT - 1
-    )
+    return target->x == x && target->y == y; 
+}
+
+bool snake_at_location(uint8_t x, uint8_t y)
+{
+    cell *asset = snake_head;
+    while (--asset != target)
     {
-        return false;
+        if(asset->x == x && asset->y == y)
+        return true;
     }
+    return false;
+}
+
+
+void move_target()
+{
+    do {
+    target->x = rand() % (DISPLAY_WIDTH / CELL_SIZE) * CELL_SIZE;
+    target->y = rand() % (DISPLAY_HEIGHT / CELL_SIZE) * CELL_SIZE;
+    } while (snake_at_location(target->x, target->y));
+}
+
+void grow_snake(uint8_t x, uint8_t y)
+{
+    ++snake_head;
+    ++assets_len;
+    snake_head->x = x;
+    snake_head->y = y;
+    move_target();
+}
+
+
+bool move_snake(int8_t x, int8_t y)
+{
 
     // Move body cells into next location
-    for(uint8_t i = snake_len; i > 0; --i)
+    for(uint8_t i = 1; i < assets_len - 1; ++i)
     {
-        snake[i].x = snake[i-1].x; 
-        snake[i].y = snake[i-1].y; 
+        assets[i].x = assets[i+1].x; 
+        assets[i].y = assets[i+1].y; 
     }
-
     // Move snake head
-    snake[0].x += dx;
-    snake[0].y += dy;
+    snake_head->x = x;
+    snake_head->y = y;
+    
     return true;
 }
 
@@ -86,9 +100,9 @@ void render3()
             uint8_t x = col;
             uint8_t y = page * 8;
             uint8_t bytebuffer = 0x0;
-            for(int i = 0; i < snake_len; ++i)
+            for(int i = 0; i < assets_len; ++i)
             {
-                cell *asset = &snake[i];
+                cell *asset = &assets[i];
                 if (
                     asset->x <= x && asset->x + CELL_SIZE > x
                 )
@@ -115,6 +129,7 @@ void render3()
     ssd1306_stop();
 }
 
+
 void render_tiles()
 {
     // Render tiles 8x8 size
@@ -132,9 +147,9 @@ void render_tiles()
             pattern = ptn0;
 
             // Search for snake cell at [col, page] location
-            for(uint8_t i=0; i < snake_len; ++i)
+            for(uint8_t i=0; i < assets_len; ++i)
             {
-                if(snake[i].x == col*8 && snake[i].y == page*8)
+                if(assets[i].x == col*8 && assets[i].y == page*8)
                 {
                     if(i == 0)
                     {
@@ -151,7 +166,6 @@ void render_tiles()
             }
         }
     }
-    
     ssd1306_stop();
 }
 
@@ -175,38 +189,20 @@ int main()
 	ssd1306_init();
     clear_screen();
 
-    // Set up snake
-    // ============
-    
-    // Add Snake head
-    snake[0].x = 64;
-    snake[0].y = 16;
-    ++snake_len;
 
-    // Add body cells
-    snake[1].x = 56;
-    snake[1].y = 16;
-    ++snake_len;
+    // Setup game
+    // ==========
 
-    snake[2].x = 48;
-    snake[2].y = 16;
-    ++snake_len;
+    snake_head->x = 64;
+    snake_head->y = 24;
 
-    snake[3].x = 40;
-    snake[3].y = 16;
-    ++snake_len;
+    move_target();
 
-    snake[4].x = 32;
-    snake[4].y = 16;
-    ++snake_len;
-
+    // Snake starts stationary
+    next_direction = BTN_NULL;
 
     // Set global timer initial value
     timemark = global_timer();
-
-    // Start snake as stationary
-    next_direction = BTN_NULL;
-
 
 	// ssd1306_send_progmem_data(default_image_length, image_2); // ssd1306 raw example: show an image
     // _delay_ms(1000);
@@ -217,43 +213,55 @@ int main()
         uint64_t _timemark = global_timer();
         if(_timemark - timemark > 10)
         {
+            uint8_t dx = 0;
+            uint8_t dy = 0;
             // Move snake
             switch (next_direction)
             {
-
-                // Move snake
                 case BTN_N:
-                    move_snake(0, -1);
+                    dy = -1;
                     break;
                 case BTN_E:
-                    move_snake(1, 0);
+                    dx = 1;
                     break;
                 case BTN_S:
-                    move_snake(0, 1);
+                    dy = 1;
                     break;
                 case BTN_W:
-                    move_snake(-1, 0);
+                    dx = -1;
                     break;
                 default:
-                    move_snake(0, 0);
+            }
+
+            uint8_t xx = snake_head->x + (dx * CELL_SIZE);
+            uint8_t yy = snake_head->y + (dy * CELL_SIZE);
+            if(target_at_location(xx, yy))
+            {
+                grow_snake(xx, yy);
+            }
+            else if (snake_at_location(xx, yy))
+            {
+                if(!audio_is_playing())
+                start_tune(&riff_lose);
+                led_on(); 
+                // temp keep moving snake
+                move_snake(xx, yy);
+            }
+            else if(out_of_bounds(xx, yy))
+            {
+                led_on(); 
+                // temp stop snake moving
+                dx = 0;
+                dy = 0;
+            }
+            else
+            {
+                move_snake(xx, yy);
+                led_off();
             }
 
             // Update display
             render_tiles();
-
-            // Check for collision
-            if(collision())
-            {
-                if(!audio_is_playing())
-                {
-                start_tune(&riff_lose);
-                led_on();
-                }
-            }
-            else
-            {
-                led_off();
-            }
 
             // Restart timer
             timemark = _timemark;
@@ -267,7 +275,6 @@ int main()
         }
   
         update_audio();
-
 
     }
     
