@@ -12,6 +12,8 @@ enum btn_input {
     BTN_E,
     BTN_S,
     BTN_W,
+    BTN_AUX,
+    BTN_AUX_W,
     BTN_NULL,
     BTN_ERROR
 };

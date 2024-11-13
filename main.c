@@ -269,7 +269,13 @@ int main()
 
         // Checking for new user input
         btn = read_buttons();
-        if(btn != BTN_NULL && btn != BTN_ERROR)
+        if(btn == BTN_AUX_W)
+        {
+            led_on();
+            _delay_ms(1000);
+            led_off();
+        }
+        else if(btn != BTN_NULL && btn != BTN_ERROR)
         {
             next_direction = btn;
         }
