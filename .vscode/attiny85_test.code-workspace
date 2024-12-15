@@ -1,7 +1,7 @@
 {
 	"folders": [
 		{
-			"path": ".."
+			"path": "../.."
 		}
 	],
 	"settings": {
@@ -10,7 +10,8 @@
 			"*.css": "css",
 			"*.js": "javascript",
 			"delay.h": "c",
-			"pgmspace.h": "c"
+			"pgmspace.h": "c",
+			"compare": "c"
 		}
 	}
 }

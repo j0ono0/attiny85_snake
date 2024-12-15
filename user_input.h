@@ -14,12 +14,14 @@ enum btn_input {
     BTN_W,
     BTN_AUX,
     BTN_AUX_W,
+    BTN_AUX_E,
     BTN_NULL,
     BTN_ERROR
 };
 
 void init_adc();
 uint16_t read_adc();
-enum btn_input read_buttons();
+enum btn_input read_action_buttons();
+enum btn_input read_dpad_buttons();
 
 #endif

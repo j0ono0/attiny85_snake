@@ -31,8 +31,8 @@ void i2c_init() {
 	DDRB |= (1 << SDA);
 	DDRB |= (1 << SCL);
 
-	SDA_RELEASE();
 	SCL_RELEASE();
+	SDA_RELEASE();
 	
     // Control regsiter 
 	USICR = (1 << USIWM1) | // Wire Mode (Two-wire mode)
@@ -44,11 +44,12 @@ void i2c_init() {
 
 	// Data register - Releases SDA?
 	USIDR = 0xFF;
+	SDA_RELEASE();
 }
 
 void i2c_start() {
-	SDA_DOWN();
 	SCL_DOWN();
+	SDA_DOWN();
 
     // if (!(USISR & (1 << USISIF)))
 	// {
@@ -74,6 +75,7 @@ void i2c_transfer(uint8_t usictn_mask) {
 		TOGGLE_CLK();
 		_delay_us(1);
 		TOGGLE_CLK();
+		_delay_us(1);
 	}
 }
 

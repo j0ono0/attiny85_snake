@@ -5,7 +5,18 @@
 #include "t85_i2c.h"
 
 
+// 0b011110{SA0 bit}{R/W bit}
+// slave address bit (SA0) either 0 or 1
+// R/W bit eith 0 (write) or 1 (read)
+
+// SA0 = 1, R/W = 0
+// 0b01111010 = 0x7A
+
+// SA0 = 0, R/W = 0
+// 0b01111000 = 0x78
+
 #define SSD1306_ADDR_WRITE 0x78
+// #define SSD1306_ADDR_WRITE 0x7A
 
 #define SSD1306_CONTROL_BYTE_CMD  0x00
 #define SSD1306_CONTROL_BYTE_DATA 0x40

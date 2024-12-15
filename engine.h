@@ -23,4 +23,7 @@
     void led_on();
     void led_off();
     void toggle_led();
+    void led_green_on();
+    void led_green_off();
+    void toggle_green_led();
 #endif

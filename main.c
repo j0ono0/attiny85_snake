@@ -189,6 +189,15 @@ int main()
 	ssd1306_init();
     clear_screen();
 
+    //////////////////////////////////////////////////////////////////////
+    // TESTING ///////////////////////////////////////////////////////////
+    
+
+
+    //////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////
+
+    
 
     // Setup game
     // ==========
@@ -210,6 +219,7 @@ int main()
 
     while(1)
     {
+
         uint64_t _timemark = global_timer();
         if(_timemark - timemark > 10)
         {
@@ -230,6 +240,14 @@ int main()
                 case BTN_W:
                     dx = -1;
                     break;
+                case BTN_AUX_W:
+                    dx = -1;
+                    dy = -1;
+                    break;
+                case BTN_AUX_E:
+                    dx = 1;
+                    dy = 1;
+                    break;
                 default:
             }
 
@@ -243,13 +261,11 @@ int main()
             {
                 if(!audio_is_playing())
                 start_tune(&riff_lose);
-                led_on(); 
                 // temp keep moving snake
                 move_snake(xx, yy);
             }
             else if(out_of_bounds(xx, yy))
             {
-                led_on(); 
                 // temp stop snake moving
                 dx = 0;
                 dy = 0;
@@ -257,7 +273,6 @@ int main()
             else
             {
                 move_snake(xx, yy);
-                led_off();
             }
 
             // Update display
@@ -268,21 +283,23 @@ int main()
         }
 
         // Checking for new user input
-        btn = read_buttons();
-        if(btn == BTN_AUX_W)
+        enum btn_input action_btn = read_action_buttons();
+        enum btn_input dpad_btn = read_dpad_buttons();
+
+        if(action_btn != BTN_NULL && action_btn != BTN_ERROR)
         {
-            led_on();
-            _delay_ms(1000);
-            led_off();
+            next_direction = action_btn;
         }
-        else if(btn != BTN_NULL && btn != BTN_ERROR)
+
+        else if(dpad_btn != BTN_NULL && dpad_btn != BTN_ERROR)
         {
-            next_direction = btn;
+            next_direction = dpad_btn;
         }
   
         update_audio();
 
     }
+    
     
 
     return 0;
