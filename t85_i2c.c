@@ -1,15 +1,19 @@
 
-/*
-
-Simple i2c master for ATTiny85.
-Designed to work with ssd1603 oled screen
-
-*/
 
 #include "t85_i2c.h"
 
-#define SDA PB0
-#define SCL PB2
+
+
+#define PIN_SDA PB0
+#define PIN_SCL PB2
+
+#define WAIT_LONG 0 // 5 // 4,7us (some fine tunning can be made here...)
+#define WAIT_SHORT 0 // 4 // 4,0us
+
+// USISR mask
+#define USISR_CLOCK_8_BITS		0b11110000
+#define USISR_CLOCK_1_BIT  		0b11111110
+
 
 // Counter settings for USISR
 // Note: counter increments on *both* rising and falling edges in i2c mode.
@@ -18,57 +22,70 @@ Designed to work with ssd1603 oled screen
 #define USICTN_1_BIT_TRANSFER  0xe 
 
 #define TOGGLE_CLK() (USICR |= (1 << USITC))
-#define CLEAR_USISR() (USISR = 0xF0)
-#define SDA_DOWN() (PORTB &= ~(1 << SDA))
-#define SDA_RELEASE() (PORTB |= (1 << SDA))
-#define SCL_DOWN() (PORTB &= ~(1 << SCL))
-#define SCL_RELEASE() (PORTB |= (1 << SCL))
-
+#define SDA_LOW() (PORTB &= ~(1 << PIN_SDA))
+#define SCL_LOW() (PORTB &= ~(1 << PIN_SCL))
+// Note: "release" drives the pin high.
+#define SDA_RELEASE() (PORTB |= (1 << PIN_SDA))
+#define SCL_RELEASE() (PORTB |= (1 << PIN_SCL))
 
 
 void i2c_init() {
 
-	DDRB |= (1 << SDA);
-	DDRB |= (1 << SCL);
+    DDRB |= (1 << PIN_SDA);
+    DDRB |= (1 << PIN_SCL);
 
-	SCL_RELEASE();
-	SDA_RELEASE();
-	
-    // Control regsiter 
-	USICR = (1 << USIWM1) | // Wire Mode (Two-wire mode)
-			(1 << USICS1) | // Clock Source Select
-			(1 << USICLK);  // Clock Select Register
+    SCL_RELEASE();
+    SDA_RELEASE();
 
-	// Status register - Clear flags and reset counter
-	CLEAR_USISR();
+    USIDR = 0xFF;
 
-	// Data register - Releases SDA?
-	USIDR = 0xFF;
-	SDA_RELEASE();
+    // Set TWI mode
+    USICR = (1 << USIWM1) | (1 << USICS1) | (1 << USICLK);
+    // Clear flags
+    USISR = (1 << USISIF) | (1 << USIOIF) | (1 << USIPF); 
+
+
 }
 
 void i2c_start() {
-	SCL_DOWN();
-	SDA_DOWN();
 
-    // if (!(USISR & (1 << USISIF)))
-	// {
-	// // Alert if start condition not detected
-	// }
+    // generate start condition    
+    SDA_RELEASE();
+    SCL_RELEASE();
+    while (!(PORTB & (1<<PIN_SCL)));
 
+    SDA_LOW();
 
-	// Release SDA
-	SDA_RELEASE();
+    // _delay_us(WAIT_LONG);
+
+    SCL_LOW();
+    SDA_RELEASE();
+
 }
 
 void i2c_stop() {
-	SCL_RELEASE();
-	SDA_RELEASE();
+
+    // Generate end condition
+    SDA_LOW();
+    SCL_RELEASE();
+    while (!(PORTB & (1<<PIN_SCL)));
+
+    // _delay_us(WAIT_LONG);
+
+    // release SDA
+    SDA_RELEASE();
+    
+    // _delay_us(WAIT_SHORT);
+
 }
 
-void i2c_transfer(uint8_t usictn_mask) {
-	// Clear flags and set counter
-	USISR = 0xF0 | usictn_mask;
+uint8_t i2c_transfer(uint8_t usisr_mask) {
+
+    // Ensure SCL is low
+    SCL_LOW();
+
+    USISR = usisr_mask;
+
 	// Transfer data in USIDR
 	while(!(USISR & (1 << USIOIF)))
 	{
@@ -77,29 +94,31 @@ void i2c_transfer(uint8_t usictn_mask) {
 		TOGGLE_CLK();
 		_delay_us(1);
 	}
+
+    uint8_t data_buffer = USIBR;
+
+    // release SDA
+    USIDR = 0xFF; // 0x80 will work too (bit 7)
+
+    return data_buffer; // previous USIDR copy
+
+}
+
+// controller sends a byte to the bus
+// returns 0 if there's a valid nack, otherwise 1
+uint8_t i2c_write_byte(uint8_t data) {
+    USIDR = data;
+    i2c_transfer(USISR_CLOCK_8_BITS);
+
+    return i2c_read_ack();
+
 }
 
 uint8_t i2c_read_ack()
 {
-	// SDA as input
-	DDRB &= ~(1 << SDA);
-	USIDR = 0x0;
-	i2c_transfer(USICTN_1_BIT_TRANSFER);
-	DDRB |= (1 << SDA);
-	// SDA as output
-	uint8_t ack = USIBR;
-	USIDR = 0xFF;
-	// Convert successful ack as '1' rather than '0'
-	return !ack;
-}
-
-void i2c_write_byte(uint8_t data) {
-	USIDR = data;
-	i2c_transfer(USICTN_8_BIT_TRANSFER);
-	// Read acknowledgement from slave
-	if(!i2c_read_ack())
-	{
-		DDRB |= (1<<PB4);
-    	PORTB |= (1<<PB4);
-	}
+    // wait for ack
+    DDRB &= ~(1<< PIN_SDA); // to input
+    uint8_t ack = i2c_transfer(USISR_CLOCK_1_BIT);
+    DDRB |= (1 << PIN_SDA);
+    return ack;
 }

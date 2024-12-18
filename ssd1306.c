@@ -2,8 +2,6 @@
 	ssd1306 library.
 */
 
-#ifndef SSD1306_attiny85_c
-#define SSD1306_attiny85_c
 
 #include "ssd1306.h"
 
@@ -181,5 +179,3 @@ void draw_lines()
 
 }
 
-
-#endif

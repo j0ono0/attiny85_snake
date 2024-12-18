@@ -11,7 +11,8 @@
 			"*.js": "javascript",
 			"delay.h": "c",
 			"pgmspace.h": "c",
-			"compare": "c"
+			"compare": "c",
+			"t85_i2c.h": "c"
 		}
 	}
 }
