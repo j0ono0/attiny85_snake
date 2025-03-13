@@ -16,10 +16,13 @@
 uint64_t timemark;
 enum btn_input next_direction;
 
+uint8_t ptn3[] = {0x5a, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x5a}; // snake body, vertical
 uint8_t ptn2[] = {0xFF, 0x81, 0xA5, 0x99, 0x99, 0xA5, 0x81, 0xFF}; // X in square
 uint8_t ptn1[] = {0xFF, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0xFF}; // Outlined square
 uint8_t ptn0[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Blank (black)
+
 enum btn_input btn;
+
 // As snake grows head moves along array
 cell assets [128];
 cell *target = &assets[0];
@@ -73,6 +76,15 @@ void grow_snake(uint8_t x, uint8_t y)
 
 bool move_snake(int8_t x, int8_t y)
 {
+
+    // wrap coords around screen
+    x = x % DISPLAY_WIDTH;
+    if (x < 0) 
+    {x = x + DISPLAY_WIDTH;}
+    
+    y = y % DISPLAY_HEIGHT;
+    if (y < 0) 
+    {y = y + DISPLAY_HEIGHT;}
 
     // Move body cells into next location
     for(uint8_t i = 1; i < assets_len - 1; ++i)
@@ -179,7 +191,8 @@ int main()
     CLKPR=0;
     //==================================================
 
-
+    // might solve occassional glitch with screen?
+    _delay_ms(100);
     
 
     // Configure hardware
@@ -259,12 +272,6 @@ int main()
                 start_tune(&riff_lose);
                 // temp keep moving snake
                 move_snake(xx, yy);
-            }
-            else if(out_of_bounds(xx, yy))
-            {
-                // temp stop snake moving
-                dx = 0;
-                dy = 0;
             }
             else
             {

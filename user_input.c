@@ -47,12 +47,12 @@ enum btn_input read_action_buttons()
         int val = read_adc();
         sei();
 
-        if(val < 700 && val > 600)
+        if(val < 727 && val > 687) // 707
         { 
             if(++count[BTN_AUX_W] >= BTN_COUNT_THRESHOLD)
                 return BTN_AUX_W;
         }
-        else if(val < 1000 && val > 800)
+        else if(val < 337 && val > 297) //317
         {
             if(++count[BTN_AUX_E] >= BTN_COUNT_THRESHOLD)
                 return BTN_AUX_E;
@@ -81,25 +81,25 @@ enum btn_input read_dpad_buttons()
         int val = read_adc();
         sei();
 
-        if (val < 941 && val > 921 ) // 931
-        {
-            if(++count[BTN_W] >= BTN_COUNT_THRESHOLD)
-                return BTN_W;
-        }
-        else if (val < 839 && val > 819) // 829
+        if (val < 870 && val > 830 ) // 850
         {
             if(++count[BTN_N] >= BTN_COUNT_THRESHOLD)
                 return BTN_N;
         }
-        else if (val < 693 && val > 678) // 683
-        {
-            if(++count[BTN_S] >= BTN_COUNT_THRESHOLD)
-                return BTN_S;
-        }
-        else if (val < 522 && val > 502) // 512
+        else if (val < 743 && val > 703) // 723
         {
             if(++count[BTN_E] >= BTN_COUNT_THRESHOLD)
                 return BTN_E;
+        }
+        else if (val < 535 && val > 495) // 515
+        {
+            if(++count[BTN_W] >= BTN_COUNT_THRESHOLD)
+                return BTN_W;
+        }
+        else if (val < 352 && val > 312) // 332
+        {
+            if(++count[BTN_S] >= BTN_COUNT_THRESHOLD)
+                return BTN_S;
         }
         else if(val < 5)
         { 
