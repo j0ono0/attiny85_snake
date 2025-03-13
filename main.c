@@ -190,9 +190,6 @@ int main()
     // Change prescaler to 1 (run attiny85 at 8Mhz)
     CLKPR=0;
     //==================================================
-
-    // might solve occassional glitch with screen?
-    _delay_ms(100);
     
 
     // Configure hardware
@@ -230,7 +227,7 @@ int main()
     {
 
         uint64_t _timemark = global_timer();
-        if(_timemark - timemark > 10)
+        if(_timemark - timemark > 5)
         {
             uint8_t dx = 0;
             uint8_t dy = 0;
