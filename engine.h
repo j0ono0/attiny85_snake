@@ -54,14 +54,15 @@
         const uint8_t *data;
     } glyph;
 
+    //TODO: store these in PROGMEM
+    const glyph glyph_blank = {.len=1, .data=sym_blank};
+    const glyph glyph_x_square = {.len=8, .data=sym_x_square};
+    const glyph glyph_square = {.len=8, .data=sym_square};
 
-    const glyph glyph_blank PROGMEM = {.len=1, .data=sym_blank};
-    const glyph glyph_x_square PROGMEM = {.len=8, .data=sym_x_square};
-    const glyph glyph_square PROGMEM = {.len=8, .data=sym_square};
-
-    // const glyph glyph_a  = {.len=8, .data=sym_a};
-    // const glyph glyph_b  = {.len=8, .data=sym_b};
-    // const glyph glyph_c  = {.len=8, .data=sym_c};
+    // const glyph glyph_a  = {.len=5, .data=sym_a};
+    // const glyph glyph_b  = {.len=5, .data=sym_b};
+    // const glyph glyph_c  = {.len=5, .data=sym_c};
+    // const glyph glyph_m  = {.len=7, .data=sym_m};
 
 
     void led_on();

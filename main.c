@@ -78,16 +78,6 @@ void grow_snake(uint8_t x, uint8_t y)
 
 bool move_snake(int8_t x, int8_t y)
 {
-
-    // wrap coords around screen
-    x = x % DISPLAY_WIDTH;
-    if (x < 0) 
-    {x = x + DISPLAY_WIDTH;}
-    
-    y = y % DISPLAY_HEIGHT;
-    if (y < 0) 
-    {y = y + DISPLAY_HEIGHT;}
-
     // Move body cells into next location
     for(uint8_t i = 1; i < assets_len - 1; ++i)
     {
@@ -102,6 +92,7 @@ bool move_snake(int8_t x, int8_t y)
 }
 
 
+
 void render_tiles()
 {
     // Render tiles 8x8 size
@@ -109,14 +100,15 @@ void render_tiles()
     set_page_address(0, 7);
     ssd1306_start_data();
     
-    uint8_t *pattern = ptn0;
-
+    const glyph *this_glyph;
+    
     for(uint8_t page = 0; page < 8; ++page)
     {
         for(uint8_t col = 0; col < 16; ++col)
         {
             // Set blank tile as default
-            pattern = ptn0;
+            // this_glyph = &glyph_blank;
+            this_glyph = &glyph_blank;
 
             // Search for snake cell at [col, page] location
             for(uint8_t i=0; i < assets_len; ++i)
@@ -125,55 +117,22 @@ void render_tiles()
                 {
                     if(i == 0)
                     {
-                        pattern = ptn2;
+                        this_glyph = &glyph_x_square;
                     }else{
-                        pattern = ptn1;
+                        this_glyph = &glyph_square;
                     }
                     break;
                 }
             }
-            for(uint8_t ptn_val = 0; ptn_val < 8; ++ptn_val)
+            for(uint8_t i = 0; i < 8; ++i)
             {
-                i2c_write_byte(pattern[ptn_val]);
-            }
-        }
-    }
-    ssd1306_stop();
-}
-
-void render_tiles_2()
-{
-    // Render tiles 8x8 size
-    set_column_address(0, 127);
-    set_page_address(0, 7);
-    ssd1306_start_data();
-    
-    const uint8_t *pattern;
-    
-    for(uint8_t page = 0; page < 8; ++page)
-    {
-        for(uint8_t col = 0; col < 16; ++col)
-        {
-            // Set blank tile as default
-            pattern = &sym_blank[0];
-
-            // Search for snake cell at [col, page] location
-            for(uint8_t i=0; i < assets_len; ++i)
-            {
-                if(assets[i].x == col*8 && assets[i].y == page*8)
+                if(i < this_glyph->len)
                 {
-                    if(i == 0)
-                    {
-                        pattern = &sym_x_square[0];
-                    }else{
-                        pattern = &sym_square[0];
-                    }
-                    break;
+                    i2c_write_byte(pgm_read_byte(&(this_glyph->data[i])));
                 }
-            }
-            for(uint8_t ptn_val = 0; ptn_val < 8; ++ptn_val)
-            {
-                i2c_write_byte(pgm_read_byte(&(pattern[ptn_val])));
+                else{
+                    i2c_write_byte(0x0);
+                }
             }
         }
     }
@@ -255,6 +214,18 @@ int main()
 
             uint8_t xx = snake_head->x + (dx * CELL_SIZE);
             uint8_t yy = snake_head->y + (dy * CELL_SIZE);
+
+
+            // wrap coords around screen
+            xx = xx % DISPLAY_WIDTH;
+            if (xx < 0) 
+            {xx = xx + DISPLAY_WIDTH;}
+            
+            yy = yy % DISPLAY_HEIGHT;
+            if (yy < 0) 
+            {yy = yy + DISPLAY_HEIGHT;}
+
+
             if(target_at_location(xx, yy))
             {
                 grow_snake(xx, yy);
@@ -273,8 +244,7 @@ int main()
             }
 
             // Update display
-            // render_tiles();
-            render_tiles_2(); // read from rom
+            render_tiles();
 
             // Restart timer
             timemark = _timemark;
