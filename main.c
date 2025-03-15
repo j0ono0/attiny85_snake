@@ -16,7 +16,9 @@
 uint64_t timemark;
 enum btn_input next_direction;
 
-uint8_t ptn3[] = {0x5a, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x5a}; // snake body, vertical
+
+
+// uint8_t ptn3[] = {0x5a, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x5a}; // snake body, vertical
 uint8_t ptn2[] = {0xFF, 0x81, 0xA5, 0x99, 0x99, 0xA5, 0x81, 0xFF}; // X in square
 uint8_t ptn1[] = {0xFF, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0xFF}; // Outlined square
 uint8_t ptn0[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Blank (black)
@@ -100,48 +102,6 @@ bool move_snake(int8_t x, int8_t y)
 }
 
 
-void render3()
-{
-    set_column_address(0, 127);
-    set_page_address(0, 7);
-    ssd1306_start_data();
-    for(uint8_t page = 0; page < 8; ++page)
-    {
-        for(uint8_t col = 0; col < 128; ++col)
-        {
-            uint8_t x = col;
-            uint8_t y = page * 8;
-            uint8_t bytebuffer = 0x0;
-            for(int i = 0; i < assets_len; ++i)
-            {
-                cell *asset = &assets[i];
-                if (
-                    asset->x <= x && asset->x + CELL_SIZE > x
-                )
-                {
-                    if(asset->y <= y && asset->y + CELL_SIZE > y)
-                    {
-                        int8_t ox = x - asset->x;
-                        int8_t oy = y - asset->y;
-                        bytebuffer = (ptn1[ox] >> oy);
-                        break;
-                    }
-                    else if(asset->y > y && asset->y < y+8)
-                    {
-                        int8_t ox = x - asset->x;
-                        int8_t oy = asset->y - y;
-                        bytebuffer = (ptn1[ox] << oy);
-                        break;
-                    }
-                }
-            }
-            i2c_write_byte(bytebuffer);
-        }
-    }
-    ssd1306_stop();
-}
-
-
 void render_tiles()
 {
     // Render tiles 8x8 size
@@ -175,6 +135,45 @@ void render_tiles()
             for(uint8_t ptn_val = 0; ptn_val < 8; ++ptn_val)
             {
                 i2c_write_byte(pattern[ptn_val]);
+            }
+        }
+    }
+    ssd1306_stop();
+}
+
+void render_tiles_2()
+{
+    // Render tiles 8x8 size
+    set_column_address(0, 127);
+    set_page_address(0, 7);
+    ssd1306_start_data();
+    
+    const uint8_t *pattern;
+    
+    for(uint8_t page = 0; page < 8; ++page)
+    {
+        for(uint8_t col = 0; col < 16; ++col)
+        {
+            // Set blank tile as default
+            pattern = &sym_blank[0];
+
+            // Search for snake cell at [col, page] location
+            for(uint8_t i=0; i < assets_len; ++i)
+            {
+                if(assets[i].x == col*8 && assets[i].y == page*8)
+                {
+                    if(i == 0)
+                    {
+                        pattern = &sym_x_square[0];
+                    }else{
+                        pattern = &sym_square[0];
+                    }
+                    break;
+                }
+            }
+            for(uint8_t ptn_val = 0; ptn_val < 8; ++ptn_val)
+            {
+                i2c_write_byte(pgm_read_byte(&(pattern[ptn_val])));
             }
         }
     }
@@ -218,10 +217,7 @@ int main()
     // Set global timer initial value
     timemark = global_timer();
 
-	// ssd1306_send_progmem_data(default_image_length, image_2); // ssd1306 raw example: show an image
-    // _delay_ms(1000);
-
-    
+   
 
     while(1)
     {
@@ -262,6 +258,7 @@ int main()
             if(target_at_location(xx, yy))
             {
                 grow_snake(xx, yy);
+                start_tune(&riff_rebound_bottom);
             }
             else if (snake_at_location(xx, yy))
             {
@@ -276,7 +273,8 @@ int main()
             }
 
             // Update display
-            render_tiles();
+            // render_tiles();
+            render_tiles_2(); // read from rom
 
             // Restart timer
             timemark = _timemark;
