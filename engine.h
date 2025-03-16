@@ -1,7 +1,7 @@
 #ifndef GAMEENGINE_j0ono0_h
 #define GAMEENGINE_j0ono0_h
     
-#include <avr/pgmspace.h>
+    #include <avr/pgmspace.h>
     #include <stdbool.h>
     #include <stdio.h>
     #include "ssd1306.h"
@@ -53,6 +53,12 @@
         const uint8_t len;
         const uint8_t *data;
     } glyph;
+
+    const glyph symbols[] PROGMEM = {
+        {1, sym_blank}, // Blank
+        {8, sym_x_square}, // x_square
+        {8, sym_square}, // square
+    };
 
     //TODO: store these in PROGMEM
     const glyph glyph_blank = {.len=1, .data=sym_blank};

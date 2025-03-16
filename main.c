@@ -108,7 +108,7 @@ void render_tiles()
         {
             // Set blank tile as default
             // this_glyph = &glyph_blank;
-            this_glyph = &glyph_blank;
+            this_glyph = (&symbols[0]);
 
             // Search for snake cell at [col, page] location
             for(uint8_t i=0; i < assets_len; ++i)
@@ -117,22 +117,25 @@ void render_tiles()
                 {
                     if(i == 0)
                     {
-                        this_glyph = &glyph_x_square;
+                        // this_glyph = &glyph_x_square;
+                        this_glyph = (&symbols[1]);
                     }else{
-                        this_glyph = &glyph_square;
+                        // this_glyph = &glyph_square;
+                        this_glyph = (&symbols[2]);
                     }
                     break;
                 }
             }
             for(uint8_t i = 0; i < 8; ++i)
             {
-                if(i < this_glyph->len)
-                {
-                    i2c_write_byte(pgm_read_byte(&(this_glyph->data[i])));
-                }
-                else{
-                    i2c_write_byte(0x0);
-                }
+                // i2c_write_byte(pgm_read_byte(this_glyph->data[i]));
+                i2c_write_byte(pgm_read_byte(this_glyph->data[i]));
+                // if(i < this_glyph->len)
+                // {
+                // }
+                // else{
+                //     i2c_write_byte(0x0);
+                // }
             }
         }
     }
