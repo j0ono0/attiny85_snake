@@ -31,6 +31,7 @@ const uint8_t sym_w[] PROGMEM = {0xc, 0x30, 0xc0, 0x30, 0xc0, 0x30, 0xc};
 const uint8_t sym_x[] PROGMEM = {0x84, 0x48, 0x30, 0x48, 0x84};
 const uint8_t sym_y[] PROGMEM = {0x4, 0x8, 0xf0, 0x8, 0x4};
 const uint8_t sym_z[] PROGMEM = {0xc4, 0xa4, 0x94, 0x8c};
+const uint8_t sym_space[] PROGMEM = {0x0, 0x0, 0x0, 0x0};
 
 const glyph symbols[] PROGMEM = {
     {0, sym_blank}, // Blank
@@ -38,6 +39,39 @@ const glyph symbols[] PROGMEM = {
     {8, sym_square}, // square
 };
 
+const enum alpha_glyph_pos {
+    a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,space
+};
+
+const glyph alpha_glyphs[] PROGMEM = {
+    {5, sym_a},
+    {5, sym_b},
+    {5, sym_c},
+    {5, sym_d},
+    {4, sym_e},
+    {4, sym_f},
+    {4, sym_g},
+    {4, sym_h},
+    {1, sym_i},
+    {3, sym_j},
+    {4, sym_k},
+    {3, sym_l},
+    {7, sym_m},
+    {5, sym_n},
+    {5, sym_o},
+    {4, sym_p},
+    {5, sym_q},
+    {5, sym_r},
+    {4, sym_s},
+    {5, sym_t},
+    {5, sym_u},
+    {5, sym_v},
+    {7, sym_w},
+    {5, sym_x},
+    {5, sym_y},
+    {4, sym_z},
+    {4, sym_space},
+};
 
 void render_tiles(cell *assets, uint8_t *assets_len)
 {
@@ -90,19 +124,18 @@ void render_title()
     set_page_address(0, 7);
     ssd1306_start_data();
 	
-    glyph snake_glyphs[] = {
-        {4, sym_s}, 
-        {5, sym_n}, 
-        {5, sym_a}, 
-        {4, sym_k}, 
-        {4, sym_e}
-    };
+    enum alpha_glyph_pos msg_arr[] = {s,n,a,k,e,space,r,i,g,h,t,space,b,u,t,t,o,n,space,t,o,space,s,t,a,r,t};
+    uint8_t msg_len = sizeof(msg_arr) / sizeof(msg_arr[0]);
+    glyph this_glyph;
 
-    for(uint8_t i = 0; i < 5; ++i)
+    for(uint8_t i = 0; i < msg_len; ++i)
     {
-        for(uint8_t j = 0; j < snake_glyphs[i].len ; ++j)
+        // enum alpha_glyph_pos ind = letter_ind[i]
+        memcpy_P(&this_glyph, &alpha_glyphs[msg_arr[i]], sizeof(this_glyph));
+
+        for(uint8_t j = 0; j < this_glyph.len ; ++j)
         {
-            i2c_write_byte(pgm_read_byte(&(snake_glyphs[i].data[j])));
+            i2c_write_byte(pgm_read_byte(&(this_glyph.data[j])));
         }
         i2c_write_byte(0x0);
         i2c_write_byte(0x0);
