@@ -90,38 +90,23 @@ void render_title()
     set_page_address(0, 7);
     ssd1306_start_data();
 	
-	for(uint8_t i = 0; i < 4 ; ++i)
-	{
-		i2c_write_byte(pgm_read_byte(&(sym_s[i])));
-	}
-	i2c_write_byte(0x0);
-	
-	for(uint8_t i = 0; i < 5 ; ++i)
-	{
-		i2c_write_byte(pgm_read_byte(&(sym_n[i])));
-	}
-	i2c_write_byte(0x0);
-	
-	
-	for(uint8_t i = 0; i < 5 ; ++i)
-	{
-		i2c_write_byte(pgm_read_byte(&(sym_a[i])));
-	}
-	i2c_write_byte(0x0);
-	
-	
-	for(uint8_t i = 0; i < 4 ; ++i)
-	{
-		i2c_write_byte(pgm_read_byte(&(sym_k[i])));
-	}
-	i2c_write_byte(0x0);
-	
-	
-	for(uint8_t i = 0; i < 4 ; ++i)
-	{
-		i2c_write_byte(pgm_read_byte(&(sym_e[i])));
-	}
-	i2c_write_byte(0x0);
+    glyph snake_glyphs[] = {
+        {4, sym_s}, 
+        {5, sym_n}, 
+        {5, sym_a}, 
+        {4, sym_k}, 
+        {4, sym_e}
+    };
+
+    for(uint8_t i = 0; i < 5; ++i)
+    {
+        for(uint8_t j = 0; j < snake_glyphs[i].len ; ++j)
+        {
+            i2c_write_byte(pgm_read_byte(&(snake_glyphs[i].data[j])));
+        }
+        i2c_write_byte(0x0);
+        i2c_write_byte(0x0);
+    }
 	
 	ssd1306_stop();
 }
