@@ -39,6 +39,9 @@ main.elf : $(OBJS)
 main.o : main.c t85_i2c.h
 	$(CC) $(FLAGS) -c  main.c
 
+engine.o : engine.c engine.h
+	$(CC) $(FLAGS) -c engine.c
+
 input.o : engine.c engine.h
 	$(CC) $(FLAGS) -c engine.c
 

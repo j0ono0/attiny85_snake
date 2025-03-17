@@ -12,7 +12,8 @@
 			"delay.h": "c",
 			"pgmspace.h": "c",
 			"compare": "c",
-			"t85_i2c.h": "c"
+			"t85_i2c.h": "c",
+			"ssd1306.h": "c"
 		}
 	}
 }

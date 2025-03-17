@@ -5,7 +5,7 @@
     #include <stdbool.h>
     #include <stdio.h>
     #include "ssd1306.h"
-    #include "audio.h"
+    #include "t85_i2c.h"
 
 
     #define DISPLAY_WIDTH 128
@@ -26,9 +26,7 @@
     } glyph;
 
 
+    void render_tiles(cell *assets, uint8_t *assets_len);
+    void render_title();
 
-
-    void led_on();
-    void led_off();
-    void toggle_led();
 #endif
