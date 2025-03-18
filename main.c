@@ -17,6 +17,9 @@ const alpha_glyph_pos end_text[] PROGMEM = {g,a,m,e,space,o,v,e,r};
 const alpha_glyph_pos score_text[] PROGMEM = {s,c,o,r,e,space};
 const alpha_glyph_pos high_score_text[] PROGMEM = {h,i,g,h,space,s,c,o,r,e,space};
 
+// EEPROM address for high score
+uint16_t eeprom_addr_high_score = 0x0;
+
 uint64_t timemark;
 uint8_t high_score = 0;
 enum btn_input next_direction;
@@ -108,6 +111,7 @@ void end_game()
     {
         render_text(0, 1, 11, high_score_text);
         high_score = assets_len - 1;
+        EEPROM_write(eeprom_addr_high_score, high_score);
     }
     else{
         render_text(0, 1, 6, score_text);
@@ -132,17 +136,26 @@ int main()
     CLKPR=0;
     //==================================================
     
-
+    
     // Configure hardware
     // ==================
     init_global_timer();
     audio_config();
     init_adc();
-
+    
 	i2c_init();
 	ssd1306_init();
     clear_screen();
+
+    if(read_action_buttons() == BTN_AUX_W && read_dpad_buttons() == BTN_W)
+    {
+        // Reset high score in EEPROM
+        EEPROM_write(eeprom_addr_high_score, 0x0);
+    }
+
+    high_score = EEPROM_read(eeprom_addr_high_score);
     
+
     // Enter start screen and initialise game values
     init_game();
 

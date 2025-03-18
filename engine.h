@@ -2,11 +2,11 @@
 #define GAMEENGINE_j0ono0_h
     
     #include <avr/pgmspace.h>
+    #include <avr/interrupt.h>
     #include <stdbool.h>
     #include <stdio.h>
     #include "ssd1306.h"
     #include "t85_i2c.h"
-
 
     #define DISPLAY_WIDTH 128
     #define DISPLAY_HEIGHT 64
@@ -33,4 +33,6 @@
     void render_tiles(cell *assets, uint8_t *assets_len);
     void render_text(uint8_t col, uint8_t row, uint8_t arr_len, const alpha_glyph_pos *glyph_arr);
     void render_number(uint8_t num);
+    void EEPROM_write(uint16_t ucAddress, uint8_t  ucData);
+    uint8_t EEPROM_read(uint16_t ucAddress);
 #endif

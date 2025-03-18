@@ -250,17 +250,6 @@ void render_numeral(uint8_t num){
 
 void render_number(uint8_t num)
 {
-    // The number must be less than 128 (snake fills the whole screen)
-    // if(num >= 100){
-    //     num = num - 100;
-    //     //render_number(1);
-    // }
-    // if(num >= 10)
-    // {
-    //     uint8_t tens = (num - num % 10) / 10;
-    //     //render_number(tens);
-    //     num = num - tens;
-    // }
     uint8_t ones = num % 10;
     num /= 10;
     uint8_t tens = num % 10;
@@ -271,4 +260,37 @@ void render_number(uint8_t num)
     render_numeral(ones);
 
     
+}
+
+void EEPROM_write(uint16_t ucAddress, uint8_t ucData)
+{
+    cli();
+    /* Wait for completion of previous write */
+    while(EECR & (1<<EEPE))
+    ;
+    /* Set Programming mode */
+    EECR = (0<<EEPM1)|(0<<EEPM0);
+    /* Set up address and data registers */
+    EEAR = ucAddress;
+    EEDR = ucData;
+    /* Write logical one to EEMPE */
+    EECR |= (1<<EEMPE);
+    /* Start eeprom write by setting EEPE */
+    EECR |= (1<<EEPE);
+    sei();
+}
+
+uint8_t EEPROM_read(uint16_t ucAddress)
+{
+    cli();
+    /* Wait for completion of previous write */
+    while(EECR & (1<<EEPE))
+    ;
+    /* Set up address register */
+    EEAR = ucAddress;
+    /* Start eeprom read by writing EERE */
+    EECR |= (1<<EERE);
+    /* Return data from data register */
+    sei();
+return EEDR;
 }
