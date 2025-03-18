@@ -68,6 +68,7 @@ void stop_tone()
 
 void start_tune(const Tune *riff)
 {
+    stop_tune();
     current_tune = riff;
     audio_counter = 0;
     duration_start = global_timer();

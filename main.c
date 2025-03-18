@@ -11,27 +11,23 @@
 #include "engine.h"
 #include "timer.h"
 
-enum game_mode_type {
-    mode_start,
-    mode_play,
-    mode_pause,
-    mode_end
-};
-enum game_mode_type  game_mode;
+
+const alpha_glyph_pos title_text[] PROGMEM = {s,n,a,k,e,space,n0,n1,space};
+const alpha_glyph_pos end_text[] PROGMEM = {g,a,m,e,space,o,v,e,r};
+const alpha_glyph_pos score_text[] PROGMEM = {s,c,o,r,e,space};
+const alpha_glyph_pos high_score_text[] PROGMEM = {h,i,g,h,space,s,c,o,r,e,space};
 
 uint64_t timemark;
+uint8_t high_score = 0;
 enum btn_input next_direction;
-
 enum btn_input btn;
 
-const alpha_glyph_pos title_text[] PROGMEM = {s,n,a,k,e};
 
 // As snake grows head moves along array
 cell assets [128];
 cell *target = &assets[0];
 cell *snake_head = &assets[1];
 uint8_t assets_len = 2;
-
 
 bool target_at_location(uint8_t x, uint8_t y)
 {
@@ -41,10 +37,9 @@ bool target_at_location(uint8_t x, uint8_t y)
 
 bool snake_at_location(uint8_t x, uint8_t y)
 {
-    cell *asset = snake_head;
-    while (--asset != target)
+    for(uint8_t i = 1; i < assets_len; ++i)
     {
-        if(asset->x == x && asset->y == y)
+        if(assets[i].x == x && assets[i].y == y)
         return true;
     }
     return false;
@@ -85,8 +80,47 @@ bool move_snake(int8_t x, int8_t y)
     return true;
 }
 
+void init_game()
+{
+    snake_head = &assets[1];
+    snake_head->x = 64;
+    snake_head->y = 24;
+    assets_len = 2;
+    next_direction = BTN_NULL;
+    clear_screen();
+    render_text(0, 0, 9, title_text);
+    render_text(0, 1, 11, high_score_text);
+    render_number(high_score);
+    while(read_action_buttons() != BTN_AUX_E) 
+    { 
+        continue;
+    }
+    srand(global_timer());
+    move_target();
+}
 
+void end_game()
+{
+    start_tune(&riff_lose);
 
+    render_text(0, 0, 9, end_text);
+    if(high_score < assets_len -1)
+    {
+        render_text(0, 1, 11, high_score_text);
+        high_score = assets_len - 1;
+    }
+    else{
+        render_text(0, 1, 6, score_text);
+    }
+    render_number(assets_len-1);
+    while(read_action_buttons() != BTN_AUX_W) 
+    { 
+        update_audio();
+        // Wait for btn press
+    }
+    stop_tune();
+    init_game();
+}
 
 
 int main()
@@ -109,15 +143,8 @@ int main()
 	ssd1306_init();
     clear_screen();
     
-
-
-    // Setup game
-    // ==========
-    game_mode = mode_start;
-    snake_head->x = 64;
-    snake_head->y = 24;
-
-    move_target();
+    // Enter start screen and initialise game values
+    init_game();
 
     // Snake starts stationary
     next_direction = BTN_NULL;
@@ -128,121 +155,97 @@ int main()
 
     while(1)
     {
-        // Wait for game to start
-        while(game_mode == mode_start)
+        
+        uint64_t _timemark = global_timer();
+        if(_timemark - timemark > 5)
         {
-            // alpha_glyph_pos msg[] = {s,n,a,k,e};
-            render_text(0, 0, 5, title_text);
-
-
-            if(read_action_buttons() == BTN_AUX_E) 
-            { 
-                game_mode = mode_play;
-            }
-        }
-
-        while(game_mode == mode_play)
-        {
-            uint64_t _timemark = global_timer();
-            if(_timemark - timemark > 5)
+            uint8_t dx = 0;
+            uint8_t dy = 0;
+            // Move snake
+            switch (next_direction)
             {
-                uint8_t dx = 0;
-                uint8_t dy = 0;
-                // Move snake
-                switch (next_direction)
-                {
-                    case BTN_N:
-                        dy = -1;
-                        break;
-                    case BTN_E:
-                        dx = 1;
-                        break;
-                    case BTN_S:
-                        dy = 1;
-                        break;
-                    case BTN_W:
-                        dx = -1;
-                        break;
-                    case BTN_AUX_W:
-                        dx = -1;
-                        dy = -1;
-                        break;
-                    case BTN_AUX_E:
-                        dx = 1;
-                        dy = 1;
-                        break;
-                    default:
-                }
-
-                uint8_t xx = snake_head->x + (dx * CELL_SIZE);
-                uint8_t yy = snake_head->y + (dy * CELL_SIZE);
-
-
-                // wrap coords around screen
-                xx = xx % DISPLAY_WIDTH;
-                if (xx < 0) 
-                {xx = xx + DISPLAY_WIDTH;}
-                
-                yy = yy % DISPLAY_HEIGHT;
-                if (yy < 0) 
-                {yy = yy + DISPLAY_HEIGHT;}
-
-
-                if(target_at_location(xx, yy))
-                {
-                    grow_snake(xx, yy);
-                    start_tune(&riff_rebound_bottom);
-                }
-                else if (snake_at_location(xx, yy))
-                {
-                    if(!audio_is_playing())
-                    start_tune(&riff_lose);
-                    // temp keep moving snake
-                    move_snake(xx, yy);
-                }
-                else
-                {
-                    move_snake(xx, yy);
-                }
-
-                // Update display
-                render_tiles(assets, &assets_len);
-
-                // Restart timer
-                timemark = _timemark;
+                case BTN_N:
+                    dy = -1;
+                    break;
+                case BTN_E:
+                    dx = 1;
+                    break;
+                case BTN_S:
+                    dy = 1;
+                    break;
+                case BTN_W:
+                    dx = -1;
+                    break;
+                case BTN_AUX_W:
+                    dx = -1;
+                    dy = -1;
+                    break;
+                case BTN_AUX_E:
+                    dx = 1;
+                    dy = 1;
+                    break;
+                default:
             }
 
-            // Checking for new user input
-            enum btn_input action_btn = read_action_buttons();
-            enum btn_input dpad_btn = read_dpad_buttons();
+            uint8_t xx = snake_head->x + (dx * CELL_SIZE);
+            uint8_t yy = snake_head->y + (dy * CELL_SIZE);
 
-            // if(action_btn != BTN_NULL && action_btn != BTN_ERROR)
-            // {
-                
-            // }
+
+            // wrap coords around screen
+            xx = xx % DISPLAY_WIDTH;
+            if (xx < 0) 
+            {xx = xx + DISPLAY_WIDTH;}
             
-            if(action_btn == BTN_AUX_W)
+            yy = yy % DISPLAY_HEIGHT;
+            if (yy < 0) 
+            {yy = yy + DISPLAY_HEIGHT;}
+
+            if (dx == 0 && dy == 0)
             {
-                stop_tune();
-                game_mode = mode_pause;
+                //Snake is motionless! Do nothing.
             }
-            else if(dpad_btn != BTN_NULL && dpad_btn != BTN_ERROR)
+            else if(target_at_location(xx, yy))
             {
-                next_direction = dpad_btn;
+                grow_snake(xx, yy);
+                start_tune(&riff_rebound_bottom);
             }
-    
-            update_audio();
-    
+            else if (snake_at_location(xx, yy))
+            {
+                end_game();
+            }
+            else
+            {
+                move_snake(xx, yy);
+            }
+
+
+            // Restart timer
+            timemark = _timemark;
         }
 
-        while(game_mode == mode_pause)
-        {
-            if(read_action_buttons() == BTN_AUX_E)
-            {
-                game_mode = mode_play;
-            }
+        // Checking for new user input
+        enum btn_input action_btn = read_action_buttons();
+        enum btn_input dpad_btn = read_dpad_buttons();
+
+        // if(action_btn != BTN_NULL && action_btn != BTN_ERROR)
+        // {
             
+        // }
+        
+        if(action_btn == BTN_AUX_W)
+        {
+            // Effectively pauses the game
+            next_direction = BTN_NULL;
         }
+        else if(dpad_btn != BTN_NULL && dpad_btn != BTN_ERROR)
+        {
+            next_direction = dpad_btn;
+        }
+
+        // Update display
+        render_tiles(assets, &assets_len);
+        update_audio();
+    
     }
 
     return 0;
