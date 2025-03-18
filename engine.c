@@ -39,9 +39,7 @@ const glyph symbols[] PROGMEM = {
     {8, sym_square}, // square
 };
 
-const enum alpha_glyph_pos {
-    a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,space
-};
+
 
 const glyph alpha_glyphs[] PROGMEM = {
     {5, sym_a},
@@ -118,28 +116,32 @@ void render_tiles(cell *assets, uint8_t *assets_len)
     ssd1306_stop();
 }
 
-void render_title()
+
+void render_text(uint8_t col, uint8_t row, uint8_t arr_len, alpha_glyph_pos *glyph_arr)
 {
-	set_column_address(0, 127);
-    set_page_address(0, 7);
+    
+	set_column_address(col, 127);
+    set_page_address(row, 7);
     ssd1306_start_data();
-	
-    enum alpha_glyph_pos msg_arr[] = {s,n,a,k,e,space,r,i,g,h,t,space,b,u,t,t,o,n,space,t,o,space,s,t,a,r,t};
-    uint8_t msg_len = sizeof(msg_arr) / sizeof(msg_arr[0]);
-    glyph this_glyph;
 
-    for(uint8_t i = 0; i < msg_len; ++i)
+    glyph glyph;
+    alpha_glyph_pos glyph_pos;
+
+    for(uint8_t i = 0; i < arr_len; ++i)
     {
-        // enum alpha_glyph_pos ind = letter_ind[i]
-        memcpy_P(&this_glyph, &alpha_glyphs[msg_arr[i]], sizeof(this_glyph));
-
-        for(uint8_t j = 0; j < this_glyph.len ; ++j)
+        // copy alpha_glyph_pos value from progmem        
+        memcpy_P(&glyph_pos, &(glyph_arr[i]), sizeof(alpha_glyph_pos));
+        // copy glyph struct from progmem
+        memcpy_P(&glyph, &alpha_glyphs[glyph_pos], sizeof(glyph));
+        // Write data to screen
+        for(uint8_t j = 0; j < glyph.len ; ++j)
         {
-            i2c_write_byte(pgm_read_byte(&(this_glyph.data[j])));
+            i2c_write_byte(pgm_read_byte(&(glyph.data[j])));
         }
+        // Pad between letters
         i2c_write_byte(0x0);
         i2c_write_byte(0x0);
     }
-	
+
 	ssd1306_stop();
 }

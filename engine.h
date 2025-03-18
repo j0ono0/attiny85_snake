@@ -25,8 +25,11 @@
         const uint8_t *data;
     } glyph;
 
+    typedef enum  {
+        a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,space
+    }alpha_glyph_pos;
 
     void render_tiles(cell *assets, uint8_t *assets_len);
-    void render_title();
+    void render_text(uint8_t col, uint8_t row, uint8_t arr_len, alpha_glyph_pos *glyph_arr);
 
 #endif

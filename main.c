@@ -24,6 +24,8 @@ enum btn_input next_direction;
 
 enum btn_input btn;
 
+const alpha_glyph_pos title_text[] PROGMEM = {s,n,a,k,e};
+
 // As snake grows head moves along array
 cell assets [128];
 cell *target = &assets[0];
@@ -129,7 +131,10 @@ int main()
         // Wait for game to start
         while(game_mode == mode_start)
         {
-            render_title();
+            // alpha_glyph_pos msg[] = {s,n,a,k,e};
+            render_text(0, 0, 5, title_text);
+
+
             if(read_action_buttons() == BTN_AUX_E) 
             { 
                 game_mode = mode_play;
