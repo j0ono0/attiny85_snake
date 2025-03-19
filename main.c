@@ -12,16 +12,19 @@
 #include "timer.h"
 
 
-const alpha_glyph_pos title_text[] PROGMEM = {s,n,a,k,e,space,n0,n1,space};
-const alpha_glyph_pos end_text[] PROGMEM = {g,a,m,e,space,o,v,e,r};
-const alpha_glyph_pos score_text[] PROGMEM = {s,c,o,r,e,space};
-const alpha_glyph_pos high_score_text[] PROGMEM = {h,i,g,h,space,s,c,o,r,e,space};
+const alpha_glyph_pos title_text[] PROGMEM = {s,n,a,k,e,space}; // 6 chars 
+const alpha_glyph_pos end_text[] PROGMEM = {g,a,m,e,space,o,v,e,r}; // 9 chars
+const alpha_glyph_pos all_time_best_text[] PROGMEM = {a,l,l,space,t,i,m,e,space,b,e,s,t,space}; //14 chars
+const alpha_glyph_pos session_best_text[] PROGMEM = {s,e,s,s,i,o,n,space,b,e,s,t,space}; //13 chars
+const alpha_glyph_pos score_text[] PROGMEM = {s,c,o,r,e,space}; // 6 chars
+const alpha_glyph_pos new_text[] PROGMEM = {n,e,w,space}; // 4 chars
 
 // EEPROM address for high score
 uint16_t eeprom_addr_high_score = 0x0;
 
 uint64_t timemark;
-uint8_t high_score = 0;
+uint8_t high_score_all = 0;
+uint8_t high_score_session = 0;
 enum btn_input next_direction;
 enum btn_input btn;
 
@@ -91,9 +94,11 @@ void init_game()
     assets_len = 2;
     next_direction = BTN_NULL;
     clear_screen();
-    render_text(0, 0, 9, title_text);
-    render_text(0, 1, 11, high_score_text);
-    render_number(high_score);
+    render_text(0, 0, 6, title_text);
+    render_text(0, 2, 14, all_time_best_text);
+    render_number(high_score_all);
+    render_text(0, 3, 13, session_best_text);
+    render_number(high_score_session);
     while(read_action_buttons() != BTN_AUX_E) 
     { 
         continue;
@@ -104,19 +109,28 @@ void init_game()
 
 void end_game()
 {
+    uint8_t row = 0;
     start_tune(&riff_lose);
 
-    render_text(0, 0, 9, end_text);
-    if(high_score < assets_len -1)
+    render_text(0, row++, 9, end_text);
+    
+    if(assets_len -1 > high_score_all)
     {
-        render_text(0, 1, 11, high_score_text);
-        high_score = assets_len - 1;
-        EEPROM_write(eeprom_addr_high_score, high_score);
+        high_score_all = assets_len - 1;
+        high_score_session = high_score_all;
+        EEPROM_write(eeprom_addr_high_score, high_score_all);
+        render_text(0, row, 14, new_text);
+        render_text(24, row++, 14, all_time_best_text);
     }
-    else{
-        render_text(0, 1, 6, score_text);
+    else if(assets_len - 1 > high_score_session)
+    {
+        high_score_session = assets_len - 1;
+        render_text(0, row, 14, new_text);
+        render_text(24, row++, 13, session_best_text);
     }
+    render_text(0, row, 6, score_text);
     render_number(assets_len-1);
+    
     while(read_action_buttons() != BTN_AUX_W) 
     { 
         update_audio();
@@ -153,7 +167,7 @@ int main()
         EEPROM_write(eeprom_addr_high_score, 0x0);
     }
 
-    high_score = EEPROM_read(eeprom_addr_high_score);
+    high_score_all = EEPROM_read(eeprom_addr_high_score);
     
 
     // Enter start screen and initialise game values
