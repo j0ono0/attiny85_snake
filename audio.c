@@ -15,27 +15,41 @@ uint64_t duration_start = 0;
 
 
 
-    //5th octave
-    // uint8_t tone_c5 = 239;
-    // uint8_t tone_d5 = 213;
-    // uint8_t tone_e5 = 190;
-    // uint8_t tone_f5 = 179;
-    // uint8_t tone_g5 = 159;
-    // uint8_t tone_a5 = 142;
-    // uint8_t tone_b5 = 127;
-    // 6th octave
-    // uint8_t tone_c6 =119;
+//5th octave
+// uint8_t tone_c5 = 239;
+// uint8_t tone_c5# = 225;
+// uint8_t tone_d5 = 213;
+// uint8_t tone_d5# = 201;
+// uint8_t tone_e5 = 190;
+// uint8_t tone_f5 = 179;
+// uint8_t tone_f5# = 169;
+// uint8_t tone_g5 = 159;
+// uint8_t tone_g5# = 150;
+// uint8_t tone_a5 = 142;
+// uint8_t tone_a5# = 134;
+// uint8_t tone_b5 = 127;
+// 6th octave
+// uint8_t tone_c6 =119;
 
 
+Note riff_lose_data[] = {{127, 12}, {159, 12}, {190, 4}, {239, 4}, {213, 4}, {239, 4}, {213, 4}, {239, 8}};
 
+Note riff_win_big_data[] = {
+    {239, 4}, {213, 4}, {239, 4}, {213, 4}, {239, 4}, {213, 4}, {239, 4}, {213, 4}, 
+    {190, 4}, {179, 4}, {190, 4}, {179, 4}, {190, 4}, {179, 4}, {190, 4}, {179, 4}, 
+    {159, 4}, {142, 4}, {159, 4}, {142, 4}, {159, 4}, {142, 4}, {159,4}, {142,4}, {119, 16}, {142, 4}, {119,16}};
 
-Note riff_lose_data[] = {{127, 10}, {159, 10}, {190, 10}, {239, 5}, {213, 5}, {239, 5}, {213, 5}, {239, 5}};
-Note riff_rebound_top_data[] = {{142, 10}, {119, 5}, {142, 10}};
-Note riff_rebound_bottom_data[] = {{119, 10}, {142, 5}, {119, 10}};
+// Note riff_win_small_data[] = {{119, 12}, {142, 4},{159, 8}, {179, 8}, {159, 8}, {179, 8}, {127, 8}, {142, 8}, {127, 8}, {142, 8}, {119, 24}};
+Note riff_win_small_data[] = {{159, 8}, {179, 8}, {159, 8}, {179, 8}, {127, 8}, {142, 8}, {127, 8}, {142, 8}, {119, 24}};
+
+Note riff_gain_big_data[] = {{119, 12}, {142, 4}, {239, 8}, {179, 8}, {159, 8}, {142, 8}, {119, 16}};
+Note riff_gain_small_data[] = {{119, 12}, {142, 4}, {119, 12}};
 
 const Tune riff_lose = {riff_lose_data, sizeof(riff_lose_data)/sizeof(Note)};
-const Tune riff_rebound_top = {riff_rebound_top_data, sizeof(riff_rebound_top_data)/sizeof(Note)};
-const Tune riff_rebound_bottom = {riff_rebound_bottom_data, sizeof(riff_rebound_bottom_data)/sizeof(Note)};
+const Tune riff_win_big = {riff_win_big_data, sizeof(riff_win_big_data)/sizeof(Note)};
+const Tune riff_win_small = {riff_win_small_data, sizeof(riff_win_small_data)/sizeof(Note)};
+const Tune riff_gain_big = {riff_gain_big_data, sizeof(riff_gain_big_data)/sizeof(Note)};
+const Tune riff_gain_small = {riff_gain_small_data, sizeof(riff_gain_small_data)/sizeof(Note)};
 
 
 void audio_config()

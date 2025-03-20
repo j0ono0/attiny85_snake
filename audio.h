@@ -24,8 +24,10 @@
 
 
     extern const Tune riff_lose;
-    extern const Tune riff_rebound_top;
-    extern const Tune riff_rebound_bottom;
+    extern const Tune riff_win_big;
+    extern const Tune riff_win_small;
+    extern const Tune riff_gain_big;
+    extern const Tune riff_gain_small;
 
 
     void audio_config();

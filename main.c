@@ -110,11 +110,6 @@ void init_game()
     render_text_P(text_session_best);
     render_number(high_score_session);
 
-
-
-
-    
-
     while(read_action_buttons() != BTN_AUX_E) 
     { 
         continue;
@@ -259,7 +254,21 @@ int main()
             else if(target_at_location(xx, yy))
             {
                 grow_snake(xx, yy);
-                start_tune(&riff_rebound_bottom);
+                if((assets_len - 1) == high_score_all && high_score_all != 0)
+                {
+                    start_tune(&riff_win_big);
+                }
+                else if(
+                    (assets_len - 1) == high_score_session && high_score_session != 0)
+                {
+                    start_tune(&riff_win_small);
+                }
+                else if((assets_len - 1) % 5 == 0)
+                {
+                    start_tune(&riff_gain_big);
+                }else{
+                    start_tune(&riff_gain_small);
+                }
             }
             else if (snake_at_location(xx, yy))
             {
