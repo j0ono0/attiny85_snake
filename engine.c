@@ -164,90 +164,6 @@ void render_tiles(cell *assets, uint8_t *assets_len)
 
 
 
-void render_text(uint8_t col, uint8_t row, uint8_t arr_len, const alpha_glyph_pos *glyph_arr)
-{
-    
-	
-    set_column_address(col, 127);
-    set_page_address(row, 7);
-    ssd1306_start_data();
-
-    glyph glyph;
-    alpha_glyph_pos glyph_pos;
-
-    for(uint8_t i = 0; i < arr_len; ++i)
-    {
-        // copy alpha_glyph_pos value from progmem        
-        memcpy_P(&glyph_pos, &(glyph_arr[i]), sizeof(alpha_glyph_pos));
-        // copy glyph struct from progmem
-        memcpy_P(&glyph, &alpha_glyphs[glyph_pos], sizeof(glyph));
-        // Write data to screen
-        for(uint8_t j = 0; j < glyph.len ; ++j)
-        {
-            i2c_write_byte(pgm_read_byte(&(glyph.data[j])));
-        }
-        // Pad between letters
-        i2c_write_byte(0x0);
-        i2c_write_byte(0x0);
-    }
-
-	ssd1306_stop();
-}
-
-void render_numeral(uint8_t num){
-    if(num > 9)
-    {
-        return;
-    }
-    glyph this_glyph;   
-    switch(num)
-    {
-        case 0:
-            memcpy_P(&this_glyph, &number_glyph[0], sizeof(this_glyph));
-            break;
-        case 1:
-            memcpy_P(&this_glyph, &number_glyph[1], sizeof(this_glyph));
-            break;
-        case 2:
-            memcpy_P(&this_glyph, &number_glyph[2], sizeof(this_glyph));
-            break;
-        case 3:
-            memcpy_P(&this_glyph, &number_glyph[3], sizeof(this_glyph));
-            break;
-        case 4:
-            memcpy_P(&this_glyph, &number_glyph[4], sizeof(this_glyph));
-            break;
-        case 5:
-            memcpy_P(&this_glyph, &number_glyph[5], sizeof(this_glyph));
-            break;
-        case 6:
-            memcpy_P(&this_glyph, &number_glyph[6], sizeof(this_glyph));
-            break;
-        case 7:
-            memcpy_P(&this_glyph, &number_glyph[7], sizeof(this_glyph));
-            break;
-        case 8:
-            memcpy_P(&this_glyph, &number_glyph[8], sizeof(this_glyph));
-            break;
-        case 9:
-            memcpy_P(&this_glyph, &number_glyph[9], sizeof(this_glyph));
-            break;
-    }
-    
-    // set_column_address(col, 127);
-    // set_page_address(row, 7);
-    ssd1306_start_data();
-    for(uint8_t j = 0; j < this_glyph.len ; ++j)
-    {
-        i2c_write_byte(pgm_read_byte(&(this_glyph.data[j])));
-    }
-
-    i2c_write_byte(0x0);
-    i2c_write_byte(0x0);
-	
-    ssd1306_stop();
-}
-
 void render_number(uint8_t num)
 {
     uint8_t ones = num % 10;
@@ -255,12 +171,161 @@ void render_number(uint8_t num)
     uint8_t tens = num % 10;
     num /= 10;
     uint8_t hundreds = num % 10;
-    render_numeral(hundreds);
-    render_numeral(tens);
-    render_numeral(ones);
-
+    char buffer[3] = {hundreds + '0', tens + '0', ones + '0',};
+    for (uint8_t i = 0; i < 3; i++) {
+        render_char(buffer[i]);
+    }
     
+}   
+
+
+// Render text from progmem
+void render_text_P(const char *text)
+{
+    char myChar;
+    int txt_len = strlen_P(text);
+    for (uint8_t i = 0; i < txt_len; i++) {
+        myChar = pgm_read_byte(text + i);
+        render_char(myChar);
+      }
 }
+
+
+void render_char(char character)
+{
+    glyph glyph;
+
+    switch(character)
+    {
+        case 'a':
+            memcpy_P(&glyph, &alpha_glyphs[0], sizeof(glyph));
+            break;
+        case 'b':
+            memcpy_P(&glyph, &alpha_glyphs[1], sizeof(glyph));
+            break;
+        case 'c':
+            memcpy_P(&glyph, &alpha_glyphs[2], sizeof(glyph));
+            break;
+        case 'd':
+            memcpy_P(&glyph, &alpha_glyphs[3], sizeof(glyph));
+            break;
+        case 'e':
+            memcpy_P(&glyph, &alpha_glyphs[4], sizeof(glyph));
+            break;
+        case 'f':
+            memcpy_P(&glyph, &alpha_glyphs[5], sizeof(glyph));
+            break;
+        case 'g':
+            memcpy_P(&glyph, &alpha_glyphs[6], sizeof(glyph));
+            break;
+        case 'h':
+            memcpy_P(&glyph, &alpha_glyphs[7], sizeof(glyph));
+            break;
+        case 'i':
+            memcpy_P(&glyph, &alpha_glyphs[8], sizeof(glyph));
+            break;
+        case 'j':
+            memcpy_P(&glyph, &alpha_glyphs[9], sizeof(glyph));
+            break;
+        case 'k':
+            memcpy_P(&glyph, &alpha_glyphs[10], sizeof(glyph));
+            break;
+        case 'l':
+            memcpy_P(&glyph, &alpha_glyphs[11], sizeof(glyph));
+            break;
+        case 'm':
+            memcpy_P(&glyph, &alpha_glyphs[12], sizeof(glyph));
+            break;
+        case 'n':
+            memcpy_P(&glyph, &alpha_glyphs[13], sizeof(glyph));
+            break;
+        case 'o':
+            memcpy_P(&glyph, &alpha_glyphs[14], sizeof(glyph));
+            break;
+        case 'p':
+            memcpy_P(&glyph, &alpha_glyphs[15], sizeof(glyph));
+            break;
+        case 'q':
+            memcpy_P(&glyph, &alpha_glyphs[16], sizeof(glyph));
+            break;
+        case 'r':
+            memcpy_P(&glyph, &alpha_glyphs[17], sizeof(glyph));
+            break;
+        case 's':
+            memcpy_P(&glyph, &alpha_glyphs[18], sizeof(glyph));
+            break;
+        case 't':
+            memcpy_P(&glyph, &alpha_glyphs[19], sizeof(glyph));
+            break;
+        case 'u':
+            memcpy_P(&glyph, &alpha_glyphs[20], sizeof(glyph));
+            break;
+        case 'v':
+            memcpy_P(&glyph, &alpha_glyphs[21], sizeof(glyph));
+            break;
+        case 'w':
+            memcpy_P(&glyph, &alpha_glyphs[22], sizeof(glyph));
+            break;
+        case 'x':
+            memcpy_P(&glyph, &alpha_glyphs[23], sizeof(glyph));
+            break;
+        case 'y':
+            memcpy_P(&glyph, &alpha_glyphs[24], sizeof(glyph));
+            break;
+        case 'z':
+            memcpy_P(&glyph, &alpha_glyphs[25], sizeof(glyph));
+            break;
+        case ' ': // space
+            memcpy_P(&glyph, &alpha_glyphs[26], sizeof(glyph));
+            break;
+            
+        case '1':
+            memcpy_P(&glyph, &alpha_glyphs[27], sizeof(glyph));
+            break;
+        case '2':
+            memcpy_P(&glyph, &alpha_glyphs[28], sizeof(glyph));
+            break;
+        case '3':
+            memcpy_P(&glyph, &alpha_glyphs[29], sizeof(glyph));
+            break;
+        case '4':
+            memcpy_P(&glyph, &alpha_glyphs[30], sizeof(glyph));
+            break;
+        case '5':
+            memcpy_P(&glyph, &alpha_glyphs[31], sizeof(glyph));
+            break;
+        case '6':
+            memcpy_P(&glyph, &alpha_glyphs[32], sizeof(glyph));
+            break;
+        case '7':
+            memcpy_P(&glyph, &alpha_glyphs[33], sizeof(glyph));
+            break;
+        case '8':
+            memcpy_P(&glyph, &alpha_glyphs[34], sizeof(glyph));
+            break;
+        case '9':
+            memcpy_P(&glyph, &alpha_glyphs[35], sizeof(glyph));
+            break;
+        case '0':
+            memcpy_P(&glyph, &alpha_glyphs[36], sizeof(glyph));
+            break;
+    }
+
+    // Write data to screen
+    ssd1306_start_data();
+    
+    for(uint8_t j = 0; j < glyph.len ; ++j)
+    {
+        i2c_write_byte(pgm_read_byte(&(glyph.data[j])));
+    }
+    // Pad between letters
+    i2c_write_byte(0x0);
+    i2c_write_byte(0x0);
+    
+
+	ssd1306_stop();
+}
+
 
 void EEPROM_write(uint16_t ucAddress, uint8_t ucData)
 {

@@ -12,12 +12,12 @@
 #include "timer.h"
 
 
-const alpha_glyph_pos title_text[] PROGMEM = {s,n,a,k,e,space}; // 6 chars 
-const alpha_glyph_pos end_text[] PROGMEM = {g,a,m,e,space,o,v,e,r}; // 9 chars
-const alpha_glyph_pos all_time_best_text[] PROGMEM = {a,l,l,space,t,i,m,e,space,b,e,s,t,space}; //14 chars
-const alpha_glyph_pos session_best_text[] PROGMEM = {s,e,s,s,i,o,n,space,b,e,s,t,space}; //13 chars
-const alpha_glyph_pos score_text[] PROGMEM = {s,c,o,r,e,space}; // 6 chars
-const alpha_glyph_pos new_text[] PROGMEM = {n,e,w,space}; // 4 chars
+const char text_snake[] PROGMEM = {"snake"}; 
+const char text_end[] PROGMEM = {"game over"}; 
+const char text_all_time_best[] PROGMEM = {"all time best "};
+const char text_session_best[] PROGMEM = {"session best "}; 
+const char text_score[] PROGMEM = {"score "}; 
+const char text_new[] PROGMEM = {"new "}; 
 
 // EEPROM address for high score
 uint16_t eeprom_addr_high_score = 0x0;
@@ -94,17 +94,34 @@ void init_game()
     assets_len = 2;
     next_direction = BTN_NULL;
     clear_screen();
-    render_text(0, 0, 6, title_text);
-    render_text(0, 2, 14, all_time_best_text);
+    
+    set_column_address(0,127);
+    set_page_address(0,7);
+    render_text_P(text_snake);
+    
+    set_column_address(0,127);
+    set_page_address(1,7);
+    render_text_P(text_all_time_best);
     render_number(high_score_all);
-    render_text(0, 3, 13, session_best_text);
+    
+    
+    set_column_address(0,127);
+    set_page_address(2,7);
+    render_text_P(text_session_best);
     render_number(high_score_session);
+
+
+
+
+    
+
     while(read_action_buttons() != BTN_AUX_E) 
     { 
         continue;
     }
     srand(global_timer());
     move_target();
+
 }
 
 void end_game()
@@ -112,23 +129,32 @@ void end_game()
     uint8_t row = 0;
     start_tune(&riff_lose);
 
-    render_text(0, row++, 9, end_text);
+    
+    set_column_address(0,127);
+    set_page_address(row++,7);
+    render_text_P(text_end);
     
     if(assets_len -1 > high_score_all)
     {
         high_score_all = assets_len - 1;
         high_score_session = high_score_all;
         EEPROM_write(eeprom_addr_high_score, high_score_all);
-        render_text(0, row, 14, new_text);
-        render_text(24, row++, 14, all_time_best_text);
+        set_column_address(0,127);
+        set_page_address(row++,7);
+        render_text_P(text_new);
+        render_text_P(text_all_time_best);
     }
     else if(assets_len - 1 > high_score_session)
     {
         high_score_session = assets_len - 1;
-        render_text(0, row, 14, new_text);
-        render_text(24, row++, 13, session_best_text);
+        set_column_address(0,127);
+        set_page_address(row++,7);
+        render_text_P(text_new);
+        render_text_P(text_session_best);
     }
-    render_text(0, row, 6, score_text);
+    set_column_address(0,127);
+    set_page_address(row,7);
+    render_text_P(text_score);
     render_number(assets_len-1);
     
     while(read_action_buttons() != BTN_AUX_W) 

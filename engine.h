@@ -25,14 +25,12 @@
         const uint8_t *data;
     } glyph;
 
-    typedef enum  {
-        a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,space,n1,n2,n3,n4,n5,n6,n7,n8,n9,n0
-    }alpha_glyph_pos;
-    
+
     
     void render_tiles(cell *assets, uint8_t *assets_len);
-    void render_text(uint8_t col, uint8_t row, uint8_t arr_len, const alpha_glyph_pos *glyph_arr);
     void render_number(uint8_t num);
+    void render_text_P(const char *text); // text stored in progmem
+    void render_char(char character);
     void EEPROM_write(uint16_t ucAddress, uint8_t  ucData);
     uint8_t EEPROM_read(uint16_t ucAddress);
 #endif
