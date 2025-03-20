@@ -211,7 +211,6 @@ int main()
                     dx = 1;
                     dy = 1;
                     break;
-                default:
             }
 
             uint8_t xx = snake_head->x + (dx * CELL_SIZE);
