@@ -96,18 +96,6 @@ const glyph alpha_glyphs[] PROGMEM = {
 
 };
 
-const glyph number_glyph[] PROGMEM = {
-    {4, sym_0},
-    {2, sym_1},
-    {4, sym_2},
-    {4, sym_3},
-    {4, sym_4},
-    {3, sym_5},
-    {4, sym_6},
-    {3, sym_7},
-    {4, sym_8},
-    {4, sym_9},
-};
 
 void render_tiles(cell *assets, uint8_t *assets_len)
 {

@@ -68,11 +68,31 @@ void grow_snake(uint8_t x, uint8_t y)
     snake_head->x = x;
     snake_head->y = y;
     move_target();
+    
+    // Queue 'grow sound'
+    if((assets_len - 2) == high_score_all && high_score_all != 0)
+    {
+        start_tune(&riff_win_big);
+    }
+    else if(
+        (assets_len - 2) == high_score_session && high_score_session != 0)
+    {
+        start_tune(&riff_win_small);
+    }
+    else if((assets_len - 1) % 5 == 0)
+    {
+        start_tune(&riff_gain_big);
+    }else{
+        start_tune(&riff_gain_small);
+    }
 }
 
 
 bool move_snake(int8_t x, int8_t y)
 {
+    //TODO: There is probably a more effecient way to track this.
+    // Maybe with a linked list?
+
     // Move body cells into next location
     for(uint8_t i = 1; i < assets_len - 1; ++i)
     {
@@ -254,21 +274,6 @@ int main()
             else if(target_at_location(xx, yy))
             {
                 grow_snake(xx, yy);
-                if((assets_len - 2) == high_score_all && high_score_all != 0)
-                {
-                    start_tune(&riff_win_big);
-                }
-                else if(
-                    (assets_len - 2) == high_score_session && high_score_session != 0)
-                {
-                    start_tune(&riff_win_small);
-                }
-                else if((assets_len - 1) % 5 == 0)
-                {
-                    start_tune(&riff_gain_big);
-                }else{
-                    start_tune(&riff_gain_small);
-                }
             }
             else if (snake_at_location(xx, yy))
             {
