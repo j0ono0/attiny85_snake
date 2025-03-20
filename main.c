@@ -254,12 +254,12 @@ int main()
             else if(target_at_location(xx, yy))
             {
                 grow_snake(xx, yy);
-                if((assets_len - 1) == high_score_all && high_score_all != 0)
+                if((assets_len - 2) == high_score_all && high_score_all != 0)
                 {
                     start_tune(&riff_win_big);
                 }
                 else if(
-                    (assets_len - 1) == high_score_session && high_score_session != 0)
+                    (assets_len - 2) == high_score_session && high_score_session != 0)
                 {
                     start_tune(&riff_win_small);
                 }
