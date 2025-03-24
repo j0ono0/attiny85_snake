@@ -33,6 +33,7 @@ enum btn_input btn;
 cell assets [128];
 cell *target = &assets[0];
 cell *snake_head = &assets[1];
+cell *snake_tail = &assets[1];
 uint8_t assets_len = 2;
 
 bool target_at_location(uint8_t x, uint8_t y)
@@ -60,16 +61,9 @@ void move_target()
     } while (snake_at_location(target->x, target->y));
 }
 
-
-void grow_snake(uint8_t x, uint8_t y)
+void grow_sound_riff()
 {
-    ++snake_head;
-    ++assets_len;
-    snake_head->x = x;
-    snake_head->y = y;
-    move_target();
-    
-    // Queue 'grow sound'
+     // Queue 'grow sound'
     if((assets_len - 2) == high_score_all && high_score_all != 0)
     {
         start_tune(&riff_win_big);
@@ -87,28 +81,57 @@ void grow_snake(uint8_t x, uint8_t y)
     }
 }
 
-
-bool move_snake(int8_t x, int8_t y)
+void grow_snake(uint8_t x, uint8_t y)
 {
-    //TODO: There is probably a more effecient way to track this.
-    // Maybe with a linked list?
 
-    // Move body cells into next location
-    for(uint8_t i = 1; i < assets_len - 1; ++i)
+    ++snake_head;
+    ++assets_len;
+
+    // Move cells along so new cell can be slotted in *before* 'snake_tail'
+    cell *current = snake_head;
+    cell *prev = snake_head - 1;
+    while(current != snake_tail)
     {
-        assets[i].x = assets[i+1].x; 
-        assets[i].y = assets[i+1].y; 
+        current->x = prev->x;
+        current->y = prev->y;
+        --current;
+        --prev;
     }
+    // Assign snake_head value to snake_tail
+    // This is becomes the newly inserted snake cell
+    snake_tail->x = snake_head->x;
+    snake_tail->y = snake_head->y;
+
+    // Move snake_tail to new tail position
+    if(++snake_tail == snake_head)
+    {
+        snake_tail = &assets[1];
+    }
+    // Update snake_head to new head position
+    snake_head->x = x;
+    snake_head->y = y;
+}
+
+
+void move_snake(int8_t x, int8_t y)
+{
+    snake_tail->x = snake_head->x;
+    snake_tail->y = snake_head->y;
+
+    if(++snake_tail >= snake_head)
+    {
+        snake_tail = &assets[1];
+    }
+
     // Move snake head
     snake_head->x = x;
     snake_head->y = y;
-    
-    return true;
 }
 
 void init_game()
 {
     snake_head = &assets[1];
+    snake_tail = &assets[1];
     snake_head->x = 64;
     snake_head->y = 24;
     assets_len = 2;
@@ -274,6 +297,8 @@ int main()
             else if(target_at_location(xx, yy))
             {
                 grow_snake(xx, yy);
+                move_target();
+                grow_sound_riff();
             }
             else if (snake_at_location(xx, yy))
             {
