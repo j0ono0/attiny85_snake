@@ -6,6 +6,17 @@ const uint8_t sym_blank[] PROGMEM = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
 const uint8_t sym_x_square[] PROGMEM = {0x81, 0x42, 0x24, 0x10, 0x08, 0x24, 0x42, 0x81};
 const uint8_t sym_square[] PROGMEM = {0xFF, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0xFF};
 const uint8_t sym_snake_head[] PROGMEM = {0xFF, 0x81, 0x81, 0x99, 0x99, 0x81, 0x81, 0xFF};
+const uint8_t sym_snake_vertical[] PROGMEM = {0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF};
+const uint8_t sym_snake_horizontal[] PROGMEM = {0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81};
+
+const glyph symbols[] PROGMEM = {
+    {8, sym_blank},
+    {8, sym_x_square}, 
+    {8, sym_square}, 
+    {8, sym_snake_head},
+    {8, sym_snake_horizontal},
+    {8, sym_snake_vertical},
+};
 
 const uint8_t sym_a[] PROGMEM = {0xc0, 0x30, 0x2c, 0x30, 0xc0};
 const uint8_t sym_b[] PROGMEM = {0xfc, 0x94, 0x94, 0x94, 0x68};
@@ -46,12 +57,6 @@ const uint8_t sym_8[] PROGMEM = {0x68, 0x94, 0x94, 0x68};
 const uint8_t sym_9[] PROGMEM = {0x48, 0x94, 0x94, 0x78};
 const uint8_t sym_0[] PROGMEM = {0x78, 0x84, 0x84, 0x78};
 
-const glyph symbols[] PROGMEM = {
-    {8, sym_blank},
-    {8, sym_x_square}, 
-    {8, sym_square}, 
-    {8, sym_snake_head},
-};
 
 // These are variable widths
 // NOTE: the order *must* match 'alpha_glyph_pos' enum
@@ -130,6 +135,7 @@ void render_tiles(cell *assets, uint8_t *assets_len)
                         memcpy_P(&this_glyph, &symbols[3], sizeof(this_glyph));
                     }
                     else{
+                        // Snake body
                         memcpy_P(&this_glyph, &symbols[2], sizeof(this_glyph));
                     }
                     break;
