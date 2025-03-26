@@ -127,7 +127,6 @@ void init_game()
 
 void end_game()
 {
-
     uint8_t snake_len = snake_length();
 
     uint8_t row = 0;
@@ -160,12 +159,13 @@ void end_game()
     render_text_P(text_score);
     render_number(snake_len);
     
-    while(read_action_buttons() != BTN_AUX_W) 
+    while(read_action_buttons() != BTN_AUX_E) 
     { 
-        update_audio();
         // Wait for btn press
+        update_audio();
     }
     stop_tune();
+    _delay_ms(500);
     init_game();
 }
 
@@ -239,6 +239,8 @@ int main()
                 case BTN_AUX_E:
                     dx = 1;
                     dy = 1;
+                    break;
+                default:
                     break;
             }
             
