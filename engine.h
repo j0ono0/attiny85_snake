@@ -12,6 +12,8 @@
     #define DISPLAY_HEIGHT 64
     // Cell width and height
     #define CELL_SIZE 8
+    #define DISPLAY_CELL_WIDTH 16
+    #define DISPLAY_CELL_HEIGHT 8
 
 
     typedef struct tile_location {
@@ -19,6 +21,10 @@
         uint8_t y;
     } cell;
     
+    typedef struct node {
+        uint8_t next;
+        uint8_t prev;
+    } node;
 
     typedef struct glyph {
         const uint8_t len;
@@ -26,8 +32,7 @@
     } glyph;
 
 
-    
-    void render_tiles(cell *assets, uint8_t *assets_len);
+    void render_tiles(node *assets);
     void render_number(uint8_t num);
     void render_text_P(const char *text); // text stored in progmem
     void render_char(char character);

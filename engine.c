@@ -101,61 +101,56 @@ const glyph alpha_glyphs[] PROGMEM = {
 
 };
 
-
-void render_tiles(cell *assets, uint8_t *assets_len)
+void render_tiles(node *assets)
 {
     // Render tiles 8x8 size
     set_column_address(0, 127);
     set_page_address(0, 7);
-    ssd1306_start_data();
-    
+    ssd1306_start_data(); 
+
     glyph this_glyph;
-    
-    for(uint8_t page = 0; page < 8; ++page)
+    for(uint8_t i = 0; i < 128; ++i)
     {
-        for(uint8_t col = 0; col < 16; ++col)
+        if(assets[i].next == 128 && assets[i].prev == 128)
         {
-            // Set blank tile as default
+            // blank tile
             memcpy_P(&this_glyph, &symbols[0], sizeof(this_glyph));
-
-            // Search for snake cell at [col, page] location
-            for(uint8_t i=0; i < *assets_len; ++i)
-            {
-                if(assets[i].x == col*8 && assets[i].y == page*8)
-                {
-                    if(i == 0)
-                    {
-                        // Target always at assets[0]
-                        memcpy_P(&this_glyph, &symbols[1], sizeof(this_glyph));
-
-                    }
-                    else if(i == *assets_len - 1)
-                    {
-                        // Snake head always at assets[assets_len]
-                        memcpy_P(&this_glyph, &symbols[3], sizeof(this_glyph));
-                    }
-                    else{
-                        // Snake body
-                        memcpy_P(&this_glyph, &symbols[2], sizeof(this_glyph));
-                    }
-                    break;
-                }
-            }
-            // Draw to screen
-            for(uint8_t i = 0; i < this_glyph.len; ++i)
-            {
-                i2c_write_byte(pgm_read_byte(&(this_glyph.data[i])));
-            }
-            // Fill the remainder width
-            for (uint8_t i = 0; i < 8 - this_glyph.len; ++i)
-            {
-                i2c_write_byte(0x0);
-            }
+        }
+        else if(assets[i].next == 129 && assets[i].prev == 129)
+        {
+            // target
+            memcpy_P(&this_glyph, &symbols[1], sizeof(this_glyph));
+        }
+        else if(assets[i].next == i && assets[i].prev < 128)
+        {
+            //snake head
+            memcpy_P(&this_glyph, &symbols[3], sizeof(this_glyph));
+        }
+        else if(assets[i].next < 128 && assets[i].prev == 128)
+        {
+            // snake tail
+            memcpy_P(&this_glyph, &symbols[2], sizeof(this_glyph));
+        }
+        else{
+            // snake body
+            memcpy_P(&this_glyph, &symbols[2], sizeof(this_glyph));
+        }
+        
+        // Draw tile to screen
+        for(uint8_t i = 0; i < this_glyph.len; ++i)
+        {
+            i2c_write_byte(pgm_read_byte(&(this_glyph.data[i])));
+        }
+        // Fill the remainder width
+        for (uint8_t i = 0; i < 8 - this_glyph.len; ++i)
+        {
+            i2c_write_byte(0x0);
         }
     }
-    ssd1306_stop();
-}
 
+    
+    ssd1306_stop(); 
+}
 
 
 void render_number(uint8_t num)

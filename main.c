@@ -29,51 +29,52 @@ enum btn_input next_direction;
 enum btn_input btn;
 
 
-// As snake grows head moves along array
-cell assets [128];
-cell *target = &assets[0];
-cell *snake_head = &assets[1];
-cell *snake_tail = &assets[1];
-uint8_t assets_len = 2;
-
-bool target_at_location(uint8_t x, uint8_t y)
-{
-    return target->x == x && target->y == y; 
-}
+// 0-127: tile locations on display
+// 128: blank
+// 129: target
+// 130: snake head -> prev leads to snake head in display
+// 131: snake tail -> next leads to snake tail in display
+node assets [132];
+node *snake_head;
+node *snake_tail;
 
 
-bool snake_at_location(uint8_t x, uint8_t y)
-{
-    for(uint8_t i = 1; i < assets_len; ++i)
+uint8_t snake_length(){
+    uint8_t count = 1;
+    node *ptr = snake_tail;
+    while(ptr != snake_head)
     {
-        if(assets[i].x == x && assets[i].y == y)
-        return true;
+        ptr = &assets[ptr->next];
+        ++count;
     }
-    return false;
+    return count;
 }
 
-
-void move_target()
+void place_target()
 {
+    uint8_t ind;
     do {
-    target->x = rand() % (DISPLAY_WIDTH / CELL_SIZE) * CELL_SIZE;
-    target->y = rand() % (DISPLAY_HEIGHT / CELL_SIZE) * CELL_SIZE;
-    } while (snake_at_location(target->x, target->y));
+        ind = rand() % (DISPLAY_CELL_WIDTH * DISPLAY_CELL_HEIGHT);
+    } while (assets[ind].next != 128 && assets[ind].prev != 128);
+
+    assets[ind].next = 129;
+    assets[ind].prev = 129;
 }
 
 void grow_sound_riff()
 {
-     // Queue 'grow sound'
-    if((assets_len - 2) == high_score_all && high_score_all != 0)
+    uint8_t snake_len = snake_length();
+
+    if((snake_len - 1) == high_score_all && high_score_all != 0)
     {
         start_tune(&riff_win_big);
     }
     else if(
-        (assets_len - 2) == high_score_session && high_score_session != 0)
+        (snake_len - 1) == high_score_session && high_score_session != 0)
     {
         start_tune(&riff_win_small);
     }
-    else if((assets_len - 1) % 5 == 0)
+    else if((snake_len) % 5 == 0)
     {
         start_tune(&riff_gain_big);
     }else{
@@ -81,60 +82,22 @@ void grow_sound_riff()
     }
 }
 
-void grow_snake(uint8_t x, uint8_t y)
-{
-
-    ++snake_head;
-    ++assets_len;
-
-    // Move cells along so new cell can be slotted in *before* 'snake_tail'
-    cell *current = snake_head;
-    cell *prev = snake_head - 1;
-    while(current != snake_tail)
-    {
-        current->x = prev->x;
-        current->y = prev->y;
-        --current;
-        --prev;
-    }
-    // Assign snake_head value to snake_tail
-    // This is becomes the newly inserted snake cell
-    snake_tail->x = snake_head->x;
-    snake_tail->y = snake_head->y;
-
-    // Move snake_tail to new tail position
-    if(++snake_tail == snake_head)
-    {
-        snake_tail = &assets[1];
-    }
-    // Update snake_head to new head position
-    snake_head->x = x;
-    snake_head->y = y;
-}
-
-
-void move_snake(int8_t x, int8_t y)
-{
-    snake_tail->x = snake_head->x;
-    snake_tail->y = snake_head->y;
-
-    if(++snake_tail >= snake_head)
-    {
-        snake_tail = &assets[1];
-    }
-
-    // Move snake head
-    snake_head->x = x;
-    snake_head->y = y;
-}
 
 void init_game()
 {
-    snake_head = &assets[1];
-    snake_tail = &assets[1];
-    snake_head->x = 64;
-    snake_head->y = 24;
-    assets_len = 2;
+    // assign assets array to 'blank' location
+    for(uint8_t i = 0; i < 128; ++i)
+    {
+        assets[i] = (node){.next = 128, .prev = 128};
+    }
+
+    // Place snake in middle(ish) of screen
+    snake_head = &assets[36];
+    snake_tail = &assets[52];
+    // Update graph with snake
+    *snake_head = (node){.next=36, .prev=52};
+    *snake_tail = (node){.next=36, .prev=52};
+
     next_direction = BTN_NULL;
     clear_screen();
     
@@ -158,23 +121,25 @@ void init_game()
         continue;
     }
     srand(global_timer());
-    move_target();
+    place_target();
 
 }
 
 void end_game()
 {
+
+    uint8_t snake_len = snake_length();
+
     uint8_t row = 0;
     start_tune(&riff_lose);
 
-    
     set_column_address(0,127);
     set_page_address(row++,7);
     render_text_P(text_end);
     
-    if(assets_len -1 > high_score_all)
+    if(snake_len > high_score_all)
     {
-        high_score_all = assets_len - 1;
+        high_score_all = snake_len;
         high_score_session = high_score_all;
         EEPROM_write(eeprom_addr_high_score, high_score_all);
         set_column_address(0,127);
@@ -182,9 +147,9 @@ void end_game()
         render_text_P(text_new);
         render_text_P(text_all_time_best);
     }
-    else if(assets_len - 1 > high_score_session)
+    else if(snake_len > high_score_session)
     {
-        high_score_session = assets_len - 1;
+        high_score_session = snake_len;
         set_column_address(0,127);
         set_page_address(row++,7);
         render_text_P(text_new);
@@ -193,7 +158,7 @@ void end_game()
     set_column_address(0,127);
     set_page_address(row,7);
     render_text_P(text_score);
-    render_number(assets_len-1);
+    render_number(snake_len);
     
     while(read_action_buttons() != BTN_AUX_W) 
     { 
@@ -276,39 +241,55 @@ int main()
                     dy = 1;
                     break;
             }
-
-            uint8_t xx = snake_head->x + (dx * CELL_SIZE);
-            uint8_t yy = snake_head->y + (dy * CELL_SIZE);
-
-
-            // wrap coords around screen
-            xx = xx % DISPLAY_WIDTH;
-            if (xx < 0) 
-            {xx = xx + DISPLAY_WIDTH;}
             
-            yy = yy % DISPLAY_HEIGHT;
-            if (yy < 0) 
-            {yy = yy + DISPLAY_HEIGHT;}
+            if(dx + dy > 0)
+            {
+                // Calculate coordinates from asset index
+                uint8_t x = (snake_head - assets) % DISPLAY_CELL_WIDTH + dx;
+                uint8_t y = (snake_head - assets) / DISPLAY_CELL_WIDTH + dy;
+                // Wrap coordinates at screen edges
+                x = x % DISPLAY_CELL_WIDTH;
+                if(x < 0)
+                {x += DISPLAY_CELL_WIDTH;}
+                
+                y = y % DISPLAY_CELL_HEIGHT;
+                if(y < 0)
+                {y += DISPLAY_CELL_HEIGHT;}
+                
+                uint8_t index = y * DISPLAY_CELL_WIDTH + x;
 
-            if (dx == 0 && dy == 0)
-            {
-                //Snake is motionless! Do nothing.
-            }
-            else if(target_at_location(xx, yy))
-            {
-                grow_snake(xx, yy);
-                move_target();
-                grow_sound_riff();
-            }
-            else if (snake_at_location(xx, yy))
-            {
-                end_game();
-            }
-            else
-            {
-                move_snake(xx, yy);
-            }
+                if(assets[index].next == 128 && assets[index].prev == 128)
+                {
+                    // Blank location
+                    // Move head to next location
+                    node *new_head = &assets[y * DISPLAY_CELL_WIDTH + x];
+                    snake_head->next = new_head - assets;
+                    *new_head = (node){.next=new_head - assets, .prev=snake_head->next};
+                    snake_head = new_head;
+                    
+                    //move tail up
+                    node *new_tail = &assets[snake_tail->next];
+                    snake_tail->prev = 128;
+                    snake_tail->next = 128;
+                    snake_tail = new_tail;
+                }
+                else if(assets[index].next == 129 || assets[index].prev == 129)
+                {
+                    // Target at location, grow snake
+                    assets[index].prev = snake_head->next;
+                    snake_head->next = index;
+                    snake_head = &assets[index];
+                    snake_head->next = index;
 
+                    place_target();
+                    grow_sound_riff();
+
+                }
+                else{
+                    // Snake at location
+                    end_game();
+                }
+            }
 
             // Restart timer
             timemark = _timemark;
@@ -334,7 +315,7 @@ int main()
         }
 
         // Update display
-        render_tiles(assets, &assets_len);
+        render_tiles(assets);
         update_audio();
     
     }
