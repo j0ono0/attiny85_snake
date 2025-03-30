@@ -1,15 +1,15 @@
-# attiny85_snake
+# Snake running on an custom built ATtiny85 game console 
 
-Snake game that runs on a custom designed and built handheld game console. At its heart is a ATtiny85 microcontroller.
+Snake game that runs on a custom designed and built handheld game console. At its heart is a ATtiny85 microcontroller. This project has been my first attempt using surface mount devices and my second attempt at designing a PCB.
 
 I'm in the process of a complete write up. Feel free to ask question via social media if this project is of interest to you.
 
-All code has been written in C. This provides good control over program size and performance which is critical due to the restricted hardware specifications.
+Snake has been written in C. This provides good control over program size and performance which is critical due to the restricted hardware specifications.
 
 
 ## Hardware
 
-This project has been my first attempt using surface mount devices and my second attempt at designing a PCB. Component selection and PCB layout was dictated by what I though (with no prior experience) I could successfully solder by hand with a soldering iron. 
+Initial PCB design was (unsurprisingly) dictated by the format a handheld game console might take. A few layouts were considered, finally settling on a landsacpe composition that would provide a more comfortable device to use plus create a little more space for parts. Maximum dimensions were set to fit within 10cm x 10cm. This matches a cost effective price-point offered by PCBWay, the PCB manufacturer I selected for this project. With primary layout goals loosly in place, component selection and exact positioning was undertaken. Component selection was dictated by what I though (with no prior experience) I could successfully solder by hand with a soldering iron. On the PCB this translated to footprints with larget pads and generous spacing between components.
 
 ### Attiny85 microcontroller
 
@@ -31,9 +31,10 @@ This project has been my first attempt using surface mount devices and my second
 Chip tunes only! Audio is controlled by a timer and interrupts on the microcontroller.
 
 ### Input
+
 - x4 buttons 'D-pad'
 - x2 buttons 'actions'
-- 
+
 6 buttons are divided into 2 groups. Each group is monitored by its own dedicated ADC enabled pin on the microcontroller. Buttons are assembled with resistors to create a voltage divider circuit allowing multiple buttons to be read on a single pin.
 
 It would be possible to read concurrent button presses via a single pin, but testing suggested splitting d-pad and action button groups would allow faster detection of single and concurrent button presses. For a gaming platorm minmising input delay is critical for a good user experience.
